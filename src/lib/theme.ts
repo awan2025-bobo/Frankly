@@ -15,6 +15,8 @@ export const C = {
   goodSoft: '#E0E0CB',
   warn: '#97783A',
   warnSoft: '#EDE2C8',
+  accent: '#D98C55', // light orange accent: Saved book, avatar, small highlights
+  accentSoft: '#F4DEC9',
   bad: '#B4693D', // muted orange: over budget, errors
   badSoft: '#EFDDCB',
   white: '#FFFFFF',

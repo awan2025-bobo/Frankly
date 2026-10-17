@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Cooking } from '@/components/Cooking';
 import { Logo } from '@/components/Logo';
+import { FloatingVeggies } from '@/components/Veggies';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';
 import { generateRecipe } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -82,6 +83,7 @@ export default function Home() {
     <Screen style={{ flexGrow: 1 }}>
       {step === 'ask' && (
         <View style={{ flex: 1 }}>
+          <FloatingVeggies />
           <Logo size={40} />
           <View style={st.askWrap}>
             <Muted style={{ textAlign: 'center' }}>

@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Body, Button, Card, H1, H3, Muted, Pill, Popup, Screen, type IconName } from '@/components/ui';
+import { KitchenScene } from '@/components/KitchenScene';
 import { getMemoryStats } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F } from '@/lib/theme';
@@ -36,10 +37,12 @@ export default function Profile() {
         </View>
       </View>
 
-      <Card style={{ gap: 12 }}>
+      {/* Kitchen clipart behind the card, like the mountain card in the team's reference */}
+      <View style={st.memory}>
+        <KitchenScene />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Ionicons name="sparkles" size={18} color={C.primary} />
-          <H3>What Frankly remembers</H3>
+          <Ionicons name="sparkles" size={18} color={C.accent} />
+          <Text style={st.memoryTitle}>What Frankly remembers</Text>
         </View>
         <View style={st.stats}>
           <Stat value={String(stats?.cooked ?? 0)} label="meals cooked" />
@@ -47,9 +50,9 @@ export default function Profile() {
           <Stat value={String(stats?.staples.length ?? 0)} label="staples on hand" />
         </View>
         {stats?.lastCooked && (
-          <Muted style={{ fontSize: 13 }}>
+          <Text style={st.memoryNote}>
             Last cooked: {stats.lastCooked.title}, {new Date(stats.lastCooked.cooked_at).toLocaleDateString()}
-          </Muted>
+          </Text>
         )}
         {!!stats?.staples.length && (
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -58,8 +61,8 @@ export default function Profile() {
             ))}
           </View>
         )}
-        <Muted style={{ fontSize: 12 }}>Every rating and cooked date shapes your next recipe and suggestions.</Muted>
-      </Card>
+        <Text style={[st.memoryNote, { fontSize: 12 }]}>Every rating and cooked date shapes your next recipe and suggestions.</Text>
+      </View>
 
       <View style={{ gap: 8 }}>
         <Row icon="options-outline" title="Change preferences" subtitle="Tastes, diet, allergens, appliances, stores" onPress={() => router.push('/preferences')} />
@@ -99,7 +102,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   return (
     <View style={{ flex: 1, alignItems: 'center', gap: 2 }}>
       <Text style={st.statValue}>{value}</Text>
-      <Muted style={{ fontSize: 12, textAlign: 'center' }}>{label}</Muted>
+      <Text style={st.statLabel}>{label}</Text>
     </View>
   );
 }
@@ -122,8 +125,12 @@ function Row({ icon, title, subtitle, onPress }: { icon: IconName; title: string
 }
 
 const st = StyleSheet.create({
-  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: C.accent, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: F.display, fontSize: 26, color: C.onPrimary },
   stats: { flexDirection: 'row' },
-  statValue: { fontFamily: F.display, fontSize: 28, color: C.ink },
+  statValue: { fontFamily: F.display, fontSize: 30, color: C.onPrimary },
+  statLabel: { fontFamily: F.body, fontSize: 12, textAlign: 'center', color: 'rgba(238,232,220,0.75)' },
+  memory: { borderRadius: 24, overflow: 'hidden', padding: 18, gap: 12, minHeight: 200, backgroundColor: C.primary },
+  memoryTitle: { fontFamily: F.bold, fontSize: 16, color: C.onPrimary },
+  memoryNote: { fontFamily: F.body, fontSize: 13, color: 'rgba(238,232,220,0.8)' },
 });

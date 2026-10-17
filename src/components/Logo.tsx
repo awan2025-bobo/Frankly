@@ -1,5 +1,6 @@
-// Frankly's logo: one-color cabbage whose leaves sweep up into a flame tip, with a small smiley.
-// Drawn in a single color; leaf lines and the face are cut out in the background color.
+// Frankly's logo: one-color cabbage made of layered leaves. The two outer leaves cup the base,
+// and the center leaf rises into a flame tip that flicks to one side. Small smiley on the center leaf.
+// Single color; the seams between leaves and the face are cut out in the background color.
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { C } from '@/lib/theme';
@@ -7,19 +8,24 @@ import { C } from '@/lib/theme';
 export function Logo({ size = 36, color = C.primary, cutout = C.bg }: { size?: number; color?: string; cutout?: string }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 48 48" accessibilityLabel="Frankly">
-      {/* flame-shaped cabbage head: round base, leaves rising to a tip that curls right */}
+      {/* outer leaves, cupping the base */}
+      <Path d="M24 45C13 45 5.5 38.5 6 29c.3-5.5 3.2-9.6 7.4-12.2-1.4 6.4-.4 13.4 4.6 19.4L24 45z" fill={color} />
+      <Path d="M24 45c11 0 18.5-6.5 18-16-.3-5.5-3.2-9.6-7.4-12.2 1.4 6.4.4 13.4-4.6 19.4L24 45z" fill={color} />
+      {/* center leaf rising into a flame tip */}
       <Path
-        d="M24 45C13.5 45 7.5 38 8 29.5c.4-6.2 4-10.2 7.6-13.6.3 3 1.6 5.2 3.6 6.4-.6-6.6 2.2-12.6 7.6-17.8.2 4.6 2.2 7.8 5.2 10.6 4.6 4.3 8.2 8.6 8 15.2C39.7 38.6 34 45 24 45z"
+        d="M24 42.5c-6.6-2.4-10.2-8.2-9.8-15 .4-6.8 4.6-10.6 7.4-15.4 1.2-2.1 1.8-4.6 1.6-7.6 3.4 2.4 5.6 5.8 6 9.6 2.6 3 4.6 6.8 4.6 12.8 0 7-3.4 13.2-9.8 15.6z"
         fill={color}
+        stroke={cutout}
+        strokeWidth={1.8}
+        strokeLinejoin="round"
       />
-      {/* leaf layers */}
-      <Path d="M16.5 42c-3.6-3.4-4.8-8.4-3.6-13.6" fill="none" stroke={cutout} strokeWidth={1.7} strokeLinecap="round" />
-      <Path d="M31.5 42c3.6-3.4 4.8-8.4 3.6-13.6" fill="none" stroke={cutout} strokeWidth={1.7} strokeLinecap="round" />
-      <Path d="M24 21.5c-2.2-3.6-1.8-7.6.8-11.6" fill="none" stroke={cutout} strokeWidth={1.5} strokeLinecap="round" />
+      {/* leaf veins on the outer leaves */}
+      <Path d="M10.2 30.5c1.6 4.6 4.8 8 9.4 10.2" fill="none" stroke={cutout} strokeWidth={1.4} strokeLinecap="round" />
+      <Path d="M37.8 30.5c-1.6 4.6-4.8 8-9.4 10.2" fill="none" stroke={cutout} strokeWidth={1.4} strokeLinecap="round" />
       {/* small round smiley */}
-      <Circle cx={20.6} cy={31.2} r={1.55} fill={cutout} />
-      <Circle cx={27.4} cy={31.2} r={1.55} fill={cutout} />
-      <Path d="M21.2 35.2c1.7 1.8 3.9 1.8 5.6 0" fill="none" stroke={cutout} strokeWidth={1.6} strokeLinecap="round" />
+      <Circle cx={21.4} cy={28.6} r={1.45} fill={cutout} />
+      <Circle cx={26.6} cy={28.6} r={1.45} fill={cutout} />
+      <Path d="M21.6 32.2c1.4 1.6 3.4 1.6 4.8 0" fill="none" stroke={cutout} strokeWidth={1.5} strokeLinecap="round" />
     </Svg>
   );
 }
