@@ -15,7 +15,7 @@ const TABS: Record<string, { label: string; icon: IconName; iconOn: IconName }> 
   profile: { label: 'Profile', icon: 'person-outline', iconOn: 'person' },
 };
 
-export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
+export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
@@ -25,7 +25,8 @@ export function TabBar({ state, navigateToTab }: BottomTabBarProps) {
         const focused = state.index === index;
         const center = route.name === 'index';
         const onPress = () => {
-          if (!focused) navigateToTab(route.key);
+          const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+          if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
         };
         if (center) {
           return (

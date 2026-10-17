@@ -64,4 +64,4 @@ npx tsx scripts/test-pricing.ts   # price-math tests
 npx supabase functions deploy recipe   # after changing an Edge Function
 ```
 
-Layout: app screens in `src/app/` (expo-router; `(tabs)/` is the bottom bar), shared UI in `src/components/`, data calls in `src/lib/api.ts`. Backend in `supabase/` (`migrations/` = schema, `functions/` = Edge Functions, `functions/_shared/pricing.ts` = price math). Expo SDK 58: read `AGENTS.md` before touching Expo APIs; use `npx expo install` to add packages.
+Layout: app screens in `src/app/` (expo-router; `(tabs)/` is the bottom bar), shared UI in `src/components/`, data calls in `src/lib/api.ts`. Backend in `supabase/` (`migrations/` = schema, `functions/` = Edge Functions, `functions/_shared/pricing.ts` = price math). Expo **SDK 57** (not 58: the App Store Expo Go for iPhone doesn't support 58 yet, so don't upgrade): read `AGENTS.md` before touching Expo APIs; use `npx expo install` to add packages.
