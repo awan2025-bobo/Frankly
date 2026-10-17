@@ -51,12 +51,13 @@ None yet.
 
 ## Env vars
 
-None yet. List names here (never values) as they're added to `.env.example`.
+App (`.env`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`. Supabase secrets: `ANTHROPIC_API_KEY`, `KROGER_CLIENT_ID`, `KROGER_CLIENT_SECRET`.
 
 ## Change log
 
 Newest first. Format: `date time — who — what changed (and anything the other Claude must know)`.
 
+- Oct 17 2:05 PM — Rick's Claude — Expo SDK 58 app scaffolded at repo root (expo-router). Supabase folder: schema migration, Edge Functions `kroger-stores`, `recipe` (the agent: Claude recipe → live Kroger pricing → best store, swaps, budget check), `suggest`. Pricing math in `supabase/functions/_shared/pricing.ts` with tests (`npx tsx scripts/test-pricing.ts`). Screens not built yet — next commit.
 - Oct 17 1:25 PM — Rick's Claude — Team answered DECISIONS.md: all approved except #5 (no pantry UI; pantry data internal only). Team overrode MVP: **live Kroger prices** (Kroger-family stores only). Bigger Cook Smarter tweaks deferred to "Later". Starting the one-shot build of the first demo.
 - Oct 17 1:05 PM — Rick's Claude — Saved the team's MVP doc as `docs/MVP.md`; added `docs/DECISIONS.md` (15 proposals, all Pending). Updated `CLAUDE.md`: MVP is source of truth, prices from a sample demo-store dataset, Kroger is stretch only, run suggestions past the team. No app code yet.
 - Oct 17 2:15 AM — Rick's Claude — Added `docs/IDEA.md` (rough idea, Cook Smarter track, rubric, open questions). Updated `CLAUDE.md` with the track and the change-log rule. Nothing built yet; waiting on the MVP doc.
