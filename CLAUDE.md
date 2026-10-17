@@ -1,6 +1,8 @@
 # Frankly — DubHacks 2026
 
-Read this first, then `HANDOFF.md` for current status and the change log, then `docs/IDEA.md` for the product idea.
+Read this first, then `HANDOFF.md` (status + change log), then **`docs/MVP.md` (source of truth for what to build)** and `docs/DECISIONS.md` (open questions; only build what's Approved). `docs/IDEA.md` is the older rough idea.
+
+**The team's rule: run any suggestion past them before building it.** Don't add features or change the flow on your own; propose it in `docs/DECISIONS.md` and ask.
 
 Two people (Rick and his partner, GitHub `awan2025-bobo`) build this together, each with their own Claude account. **Claude memory is not shared between accounts**, so this file and `HANDOFF.md` are the only shared context. Keep them current.
 
@@ -14,16 +16,17 @@ Two people (Rick and his partner, GitHub `awan2025-bobo`) build this together, e
 
 ## The app
 
-A budget chef assistant for college students and budget eaters. Onboarding captures appliances, how often they cook, cuisines and spice level. Per meal, the user enters a recipe, servings, budget, leftover tolerance and zip code. The agent picks where to buy each ingredient (cost vs. distance) and how much, remembers long-lasting pantry items so it doesn't re-buy them, and logs cook history to suggest dishes not made in a while.
+An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, optional questions skippable) captures household, taste sliders, cuisines, diet, allergens, appliances and usual stores. Five tabs: Active Recipe, Cookbook (Saved + Cooked "books"), Home ("What would you like to cook today?"), "Don't know what to make?", Profile. The agent builds a recipe within budget, prices it against a **sample dataset of demo stores**, suggests cheaper swaps, subtracts the pantry, remembers staples, and stores feedback + cooked dates to improve future suggestions. Full spec: `docs/MVP.md`.
 
-**This is still a rough idea (`docs/IDEA.md`).** An MVP document is coming; once it lands it becomes the source of truth. **Don't start building the app until the team sends it.** They plan to ask for a one-shot first demo from it.
+**Status:** MVP doc received. Waiting on the team's answers in `docs/DECISIONS.md`, then the plan is a one-shot first demo.
 
 ## Stack
 
 - **Expo (React Native)**, demoed on phones with **Expo Go** (`npx expo start`, scan the QR code).
 - **Supabase**: database, auth if needed, and **Edge Functions** for anything that uses a secret key. Second free project in Rick's account; partner is invited to the org.
 - **Claude API** (Claude Console) is the only AI provider. Claude handles recipe parsing, preference adjustments, scaling servings and matching ingredients to products.
-- **Kroger Developer API** for real store locations and prices (Kroger owns QFC and Fred Meyer, so it covers Seattle):
+- **Prices come from a local sample price dataset** of 2–3 clearly labeled demo stores (MVP: no live pricing or retailer APIs).
+- **Stretch goal only — Kroger Developer API** for real store locations and prices (Kroger owns QFC and Fred Meyer, so it covers Seattle):
   - Locations API: zip code → nearby stores with addresses and coordinates.
   - Products API: search items with prices, using `filter.locationId`.
   - Auth: client-credentials OAuth token, scope `product.compact`.
@@ -31,7 +34,7 @@ A budget chef assistant for college students and budget eaters. Onboarding captu
 
 ## Rules
 
-- **Never let the AI invent stores, addresses, distances or prices.** Those come from the Kroger API only.
+- **Never let the AI invent stores, distances or prices.** Those come from the sample dataset (or Kroger, if the stretch goal happens). Price math happens in code, not in Claude.
 - **Secrets never ship in the app.** The Claude API key and Kroger client secret live only in Supabase Edge Function secrets. The app may hold only the Supabase URL and anon key.
 - **Never commit keys.** `.env` is gitignored. Keep variable names (no values) in `.env.example`. Share real keys privately between the two of you, never in the repo, Discord channels or screenshots.
 - **Split work by area, not by file**, so two Claudes don't edit the same file. Default split: Rick owns screens/UI, partner owns Supabase, Kroger and the data side. Record who owns what in `HANDOFF.md`.
@@ -42,7 +45,7 @@ A budget chef assistant for college students and budget eaters. Onboarding captu
 
 ## Teaching note: Kroger API
 
-Rick asked to be **taught** the Kroger API while building it, not just have it done for him. He has not created the developer account yet. When Kroger work starts, explain each step as you do it:
+(Applies only if the Kroger stretch goal happens.) Rick asked to be **taught** the Kroger API while building it, not just have it done for him. He has not created the developer account yet. When Kroger work starts, explain each step as you do it:
 
 1. Register at developer.kroger.com and create an app (client ID + secret, scope `product.compact`).
 2. Get an access token with the client-credentials flow.
