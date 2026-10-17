@@ -123,7 +123,7 @@ function Row({ icon, title, subtitle, onPress }: { icon: IconName; title: string
 
 const st = StyleSheet.create({
   avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
-  avatarText: { fontFamily: F.display, fontSize: 26, color: C.white },
+  avatarText: { fontFamily: F.display, fontSize: 26, color: C.onPrimary },
   stats: { flexDirection: 'row' },
   statValue: { fontFamily: F.display, fontSize: 28, color: C.ink },
 });

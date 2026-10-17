@@ -31,7 +31,7 @@ export function Cooking({ title, lines }: { title: string; lines: string[] }) {
   return (
     <View style={st.wrap}>
       <Animated.View style={[st.pot, { transform: [{ translateY }, { rotate }] }]}>
-        <Ionicons name="restaurant" size={44} color={C.white} />
+        <Ionicons name="restaurant" size={44} color={C.onPrimary} />
       </Animated.View>
       <H1 style={{ textAlign: 'center' }}>{title}</H1>
       <View style={{ gap: 6, alignItems: 'center' }}>

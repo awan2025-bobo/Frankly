@@ -15,6 +15,9 @@ const TABS: Record<string, { label: string; icon: IconName; iconOn: IconName }> 
   profile: { label: 'Profile', icon: 'person-outline', iconOn: 'person' },
 };
 
+// Cream icons on olive, like the MOYA bottom bar; inactive tabs are faded cream.
+const FADED = 'rgba(238,232,220,0.62)';
+
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   return (
@@ -31,16 +34,16 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         if (center) {
           return (
             <Pressable key={route.key} onPress={onPress} style={st.item} accessibilityLabel="Home">
-              <View style={[st.center, focused && { backgroundColor: C.primary }]}>
-                <Ionicons name={tab.iconOn} size={28} color={C.white} />
+              <View style={[st.center, focused && { backgroundColor: C.onPrimary }]}>
+                <Ionicons name={tab.iconOn} size={28} color={C.primary} />
               </View>
             </Pressable>
           );
         }
         return (
           <Pressable key={route.key} onPress={onPress} style={st.item} accessibilityLabel={tab.label}>
-            <Ionicons name={focused ? tab.iconOn : tab.icon} size={23} color={focused ? C.primary : C.muted} />
-            <Text style={[st.label, focused && { color: C.primary }]}>{tab.label}</Text>
+            <Ionicons name={focused ? tab.iconOn : tab.icon} size={22} color={focused ? C.onPrimary : FADED} />
+            <Text style={[st.label, focused && { color: C.onPrimary }]}>{tab.label.toUpperCase()}</Text>
           </Pressable>
         );
       })}
@@ -51,19 +54,16 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 const st = StyleSheet.create({
   bar: {
     flexDirection: 'row',
-    backgroundColor: C.card,
-    borderTopWidth: 1,
-    borderTopColor: C.line,
-    paddingTop: 8,
-    ...shadow,
+    backgroundColor: C.primary,
+    paddingTop: 10,
   },
   item: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  label: { fontFamily: F.medium, fontSize: 11, color: C.muted },
+  label: { fontFamily: F.medium, fontSize: 9.5, letterSpacing: 1.2, color: FADED },
   center: {
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: C.ink,
+    backgroundColor: C.primarySoft,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: -26,

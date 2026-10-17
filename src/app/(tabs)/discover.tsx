@@ -104,9 +104,9 @@ export default function Discover() {
                 setPicker(false);
                 setCuisine(o);
               }}
-              style={[st.option, o === cuisine && { backgroundColor: C.ink }]}>
-              <Text style={[st.optionText, o === cuisine && { color: C.white }]}>{o === 'Any' ? 'Any cuisine' : o}</Text>
-              {mine.includes(o) && <Ionicons name="heart" size={14} color={o === cuisine ? C.white : C.primary} />}
+              style={[st.option, o === cuisine && { backgroundColor: C.primary }]}>
+              <Text style={[st.optionText, o === cuisine && { color: C.onPrimary }]}>{o === 'Any' ? 'Any cuisine' : o}</Text>
+              {mine.includes(o) && <Ionicons name="heart" size={14} color={o === cuisine ? C.onPrimary : C.primary} />}
             </Pressable>
           ))}
         </View>
@@ -153,6 +153,6 @@ const st = StyleSheet.create({
     paddingVertical: 14,
   },
   dropdownText: { flex: 1, fontFamily: F.medium, fontSize: 16, color: C.ink },
-  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderRadius: R.md, backgroundColor: C.card },
+  option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderRadius: R.md, backgroundColor: C.cardAlt },
   optionText: { fontFamily: F.medium, fontSize: 15, color: C.ink },
 });

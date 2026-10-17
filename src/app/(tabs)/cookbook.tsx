@@ -74,6 +74,6 @@ const st = StyleSheet.create({
     borderBottomLeftRadius: 2,
   },
   cover: { flex: 1, padding: 18, paddingLeft: 28, justifyContent: 'flex-end', gap: 6 },
-  bookTitle: { fontFamily: F.display, fontSize: 22, lineHeight: 26, color: C.white },
+  bookTitle: { fontFamily: F.display, fontSize: 22, lineHeight: 26, color: C.onPrimary },
   bookCount: { fontFamily: F.medium, fontSize: 13, color: 'rgba(255,255,255,0.85)' },
 });

@@ -1,20 +1,22 @@
-// Frankly's matcha palette: soft sage background, deep matcha green, bright matcha for "good", a warm orange accent.
+// Frankly's palette, matched to the MOYA reference: beige paper, olive-matcha green,
+// "dirty" green and beige bubbles, and a muted orange accent for warnings.
 export const C = {
-  bg: '#E1E9D2',
-  card: '#F8F9F2',
-  cardAlt: '#D7E1C4',
-  line: '#C9D4B5',
-  ink: '#1E2D21',
-  muted: '#5D6C56',
-  faint: '#97A58A',
-  primary: '#3D6B44', // deep matcha: buttons, active tab, sliders
-  primarySoft: '#D0DFBF',
-  good: '#6B9443', // bright matcha: best store, savings, cooked
-  goodSoft: '#DCEACB',
-  warn: '#A87318',
-  warnSoft: '#F3E5C6',
-  bad: '#CC6A2E', // warm orange accent: over budget, errors
-  badSoft: '#F6DCC9',
+  bg: '#EEE8DC', // beige paper
+  card: '#F6F2EA',
+  cardAlt: '#E3DBCB', // dirty beige bubble
+  line: '#D6CCBA',
+  ink: '#2E3325',
+  muted: '#77745F',
+  faint: '#A8A28C',
+  primary: '#4B5538', // olive matcha: buttons, tab bar, selected chips
+  primarySoft: '#DCDAC4', // dirty green bubble
+  onPrimary: '#EEE8DC', // text/icons on olive
+  good: '#6E7A4D', // lighter olive: best store, savings, cooked
+  goodSoft: '#E0E0CB',
+  warn: '#97783A',
+  warnSoft: '#EDE2C8',
+  bad: '#B4693D', // muted orange: over budget, errors
+  badSoft: '#EFDDCB',
   white: '#FFFFFF',
 };
 
@@ -29,8 +31,8 @@ export const F = {
 export const R = { sm: 10, md: 16, lg: 24, pill: 999 };
 
 export const shadow = {
-  shadowColor: '#2E4A30',
-  shadowOpacity: 0.08,
+  shadowColor: '#3A3F2B',
+  shadowOpacity: 0.07,
   shadowRadius: 12,
   shadowOffset: { width: 0, height: 4 },
   elevation: 2,

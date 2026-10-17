@@ -101,10 +101,13 @@ export default function Home() {
               {/* Only appears once they've typed, for keyboards without a Go key. */}
               {dish.trim() ? (
                 <Pressable onPress={() => setStep('servings')} hitSlop={12} style={st.go} accessibilityLabel="Next">
-                  <Ionicons name="arrow-forward" size={18} color={C.white} />
+                  <Ionicons name="arrow-forward" size={18} color={C.onPrimary} />
                 </Pressable>
               ) : null}
             </View>
+            <Pressable onPress={() => router.navigate('/discover')} style={{ alignSelf: 'center', padding: 8 }}>
+              <Muted style={{ textDecorationLine: 'underline' }}>Not sure what to cook?</Muted>
+            </Pressable>
           </View>
         </View>
       )}
@@ -133,7 +136,7 @@ export default function Home() {
           <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
             {quick.map((q) => (
               <Pressable key={q} onPress={() => setBudget(String(q))} style={[st.quick, budgetNum === q && st.quickOn]}>
-                <Text style={[st.quickText, budgetNum === q && { color: C.white }]}>${q}</Text>
+                <Text style={[st.quickText, budgetNum === q && { color: C.onPrimary }]}>${q}</Text>
               </Pressable>
             ))}
           </View>
@@ -200,7 +203,7 @@ function Row({ label, value, warn }: { label: string; value: string; warn?: bool
 
 const st = StyleSheet.create({
   askWrap: { flex: 1, justifyContent: 'center', gap: 18, minHeight: 460 },
-  lineRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12, borderBottomWidth: 2, borderBottomColor: C.ink },
+  lineRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12, borderBottomWidth: 2, borderBottomColor: C.primary },
   go: { width: 34, height: 34, borderRadius: 17, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
   ask: { fontFamily: F.display, fontSize: 34, lineHeight: 40, color: C.ink, textAlign: 'center' },
   askInput: {
@@ -212,7 +215,7 @@ const st = StyleSheet.create({
     paddingVertical: 10,
   },
   back: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start' },
-  quick: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.card },
-  quickOn: { backgroundColor: C.ink, borderColor: C.ink },
+  quick: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, borderWidth: 1.5, borderColor: C.cardAlt, backgroundColor: C.cardAlt },
+  quickOn: { backgroundColor: C.primary, borderColor: C.primary },
   quickText: { fontFamily: F.medium, fontSize: 14, color: C.ink },
 });

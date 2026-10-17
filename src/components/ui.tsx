@@ -77,7 +77,7 @@ export function Button({
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const fg = kind === 'primary' ? C.white : kind === 'danger' ? C.bad : C.ink;
+  const fg = kind === 'primary' ? C.onPrimary : kind === 'danger' ? C.bad : C.ink;
   return (
     <Pressable
       onPress={onPress}
@@ -118,8 +118,8 @@ export function Card({ children, style, onPress }: { children: ReactNode; style?
 export function Chip({ label, selected, onPress }: { label: string; selected: boolean; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} style={[s.chip, selected && s.chipOn]}>
-      {selected && <Ionicons name="checkmark" size={14} color={C.white} />}
-      <Text style={[s.chipText, selected && { color: C.white }]}>{label}</Text>
+      {selected && <Ionicons name="checkmark" size={14} color={C.onPrimary} />}
+      <Text style={[s.chipText, selected && { color: C.onPrimary }]}>{label}</Text>
     </Pressable>
   );
 }
@@ -263,7 +263,7 @@ export function Segmented<T extends string>({
     <View style={s.segment}>
       {options.map((o) => (
         <Pressable key={o.value} onPress={() => onChange(o.value)} style={[s.segmentItem, value === o.value && s.segmentOn]}>
-          <Text style={[s.segmentText, value === o.value && { color: C.white }]}>{o.label}</Text>
+          <Text style={[s.segmentText, value === o.value && { color: C.onPrimary }]}>{o.label}</Text>
         </Pressable>
       ))}
     </View>
@@ -362,7 +362,7 @@ export const s = StyleSheet.create({
     gap: 8,
   },
   btnPrimary: { backgroundColor: C.primary, ...shadow },
-  btnSecondary: { backgroundColor: C.card, borderWidth: 1.5, borderColor: C.line },
+  btnSecondary: { backgroundColor: C.cardAlt, borderWidth: 1.5, borderColor: C.cardAlt },
   btnGhost: { backgroundColor: 'transparent' },
   btnText: { fontFamily: F.bold, fontSize: 16 },
   card: { backgroundColor: C.card, borderRadius: R.lg, padding: 18, gap: 10, borderWidth: 1, borderColor: C.line, ...shadow },
@@ -374,11 +374,11 @@ export const s = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 9,
     borderRadius: R.pill,
-    backgroundColor: C.card,
+    backgroundColor: C.cardAlt,
     borderWidth: 1.5,
-    borderColor: C.line,
+    borderColor: C.cardAlt,
   },
-  chipOn: { backgroundColor: C.ink, borderColor: C.ink },
+  chipOn: { backgroundColor: C.primary, borderColor: C.primary },
   chipText: { fontFamily: F.medium, fontSize: 14, color: C.ink },
   pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: R.pill, alignSelf: 'flex-start' },
   pillText: { fontFamily: F.medium, fontSize: 12 },
@@ -396,11 +396,11 @@ export const s = StyleSheet.create({
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   sliderValue: { fontFamily: F.bold, fontSize: 14, color: C.primary },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 18, alignSelf: 'flex-start' },
-  stepBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: C.card, borderWidth: 1.5, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
+  stepBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: C.primarySoft, borderWidth: 1.5, borderColor: C.primarySoft, alignItems: 'center', justifyContent: 'center' },
   stepValue: { fontFamily: F.display, fontSize: 34, color: C.ink, minWidth: 40, textAlign: 'center' },
   segment: { flexDirection: 'row', backgroundColor: C.cardAlt, borderRadius: R.pill, padding: 4 },
   segmentItem: { flex: 1, paddingVertical: 10, borderRadius: R.pill, alignItems: 'center' },
-  segmentOn: { backgroundColor: C.ink },
+  segmentOn: { backgroundColor: C.primary },
   segmentText: { fontFamily: F.medium, fontSize: 14, color: C.ink },
   backdrop: { flex: 1, backgroundColor: 'rgba(24,36,26,0.45)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   popup: { backgroundColor: C.bg, borderRadius: R.lg, padding: 24, gap: 10, alignItems: 'center', width: '100%', maxWidth: 400 },

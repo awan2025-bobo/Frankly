@@ -257,6 +257,6 @@ const st = StyleSheet.create({
   itemPrice: { fontFamily: F.bold, fontSize: 15, color: C.ink },
   pin: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.primarySoft, alignItems: 'center', justifyContent: 'center' },
   step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
-  stepNum: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
-  stepNumText: { fontFamily: F.bold, color: C.white, fontSize: 13 },
+  stepNum: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  stepNumText: { fontFamily: F.bold, color: C.onPrimary, fontSize: 13 },
 });
