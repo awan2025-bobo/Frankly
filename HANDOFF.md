@@ -4,7 +4,7 @@ Update this before you stop working, then commit and push. Newest status at the 
 
 **Every commit adds a line to the Change log at the bottom**, in the same commit, so the other Claude knows what happened.
 
-_Last updated: Sat Oct 17, 2026, 1:05 PM by Rick's Claude._
+_Last updated: Sat Oct 17, 2026, 1:50 PM by Rick's Claude._
 
 ## Who owns what
 
@@ -15,39 +15,56 @@ _Last updated: Sat Oct 17, 2026, 1:05 PM by Rick's Claude._
 
 Change this table if you swap areas.
 
-## Done
+## Status
 
-- Repo created by partner (`awan2025-bobo/Frankly`) with README, Node `.gitignore` and MIT license.
-- Rick cloned it to `C:\Users\ricar\Frankly` and pushed a test edit to `README.md`.
-- Stack chosen (see `CLAUDE.md`).
-- Added `CLAUDE.md` and this file.
-- **MVP doc received** and saved as `docs/MVP.md` (source of truth). Proposals waiting on the team in `docs/DECISIONS.md`.
-- Rough product idea, chosen track (Cook Smarter) and judging rubric saved in `docs/IDEA.md`.
+**First demo is built** (one-shot from `docs/MVP.md` + `docs/DECISIONS.md`). It type-checks, bundles, and the screens were checked in a web preview with sample data. **It has NOT run against real Supabase/Claude/Kroger yet**, because the keys don't exist yet. Do the Setup below, then test the full flow on a phone.
 
-## In progress
+## Setup (do once, in this order)
 
-- README push test: **partner still needs to pull, edit `README.md`, commit and push**, then Rick pulls. If both edits show up on both laptops, the setup works.
+1. **Supabase project** (Rick's account, second free project, West US). Save the DB password.
+   - Dashboard → **Authentication → Sign In / Providers → Anonymous sign-ins: ON** (the app has no login screen).
+   - Invite partner: Organization → Team.
+2. **Link and push the database + functions** from the repo folder:
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref YOUR_PROJECT_REF
+   npx supabase db push
+   npx supabase secrets set ANTHROPIC_API_KEY=sk-ant-... KROGER_CLIENT_ID=... KROGER_CLIENT_SECRET=...
+   npx supabase functions deploy kroger-stores recipe suggest
+   ```
+3. **Claude Console:** ~$10 credit, **set a spend limit**, create the key used above.
+4. **Kroger:** follow `docs/KROGER.md` step 1 to get the client ID and secret.
+5. **App env:** copy `.env.example` to `.env` and fill in `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY` (Project Settings → API). Share `.env` privately with your partner.
+6. **Run:** `npm install`, then `npx expo start`, then scan the QR code with Expo Go. `npx expo start --web` also works in a browser.
 
-## Next (before coding starts)
+## What's built
 
-- [ ] Partner: README push test (above).
-- [ ] Rick: create the second Supabase project (West US region), save the DB password, invite partner under Organization → Team, note the Project URL and anon key.
-- [ ] Claude Console: add ~$10 credit, **set a spend limit**, create an API key for this project.
-- [ ] **Rick: sign up at developer.kroger.com** and create the app (follow `docs/KROGER.md`).
-- [ ] Both: expo.dev account, Expo Go on phones, Node v20+ on laptops (`node -v`).
-- [ ] Both: Devpost accounts, register for DubHacks 2026.
-- [ ] Share keys in one private chat between the two of you.
+- **Onboarding** (`src/app/onboarding.tsx`): name → household (+ people count, meals/week) → spice/seasoning/difficulty sliders → cuisines → diet + allergens (+Other) → appliances → stores (+Other, I don't know) → zip/GPS → "Building your Frankly…". Everything after the name is skippable.
+- **Tabs** (custom bar, `src/components/TabBar.tsx`): Active · Cookbook · **Home (center)** · Not sure? · Profile.
+- **Home** (`src/app/(tabs)/index.tsx`): "What would you like to cook today?" → servings → budget + leftovers → preferences preview (Yes / Change preferences) → "Cooking it up…" → recipe.
+- **Recipe** (`src/app/recipe/[id].tsx` + `src/components/RecipeView.tsx`): price + per serving, budget badge, store comparison with reason, "Why Frankly made it this way", cheaper swaps (toggle to apply), ingredients with **location button** (product, packages, aisle, sale price per store), steps. Draft buttons: Let's go / Save for later / I'm not feeling this. Over-budget popup.
+- **Active** tab: the one active recipe; I've finished / I'm making something else (→ Saved).
+- **I've finished** (`src/app/finish/[id].tsx`): enjoyment, cooking enjoyment, price accuracy (1–10), leftovers less/as expected/more → saved → Cooked Recipes.
+- **Cookbook**: two books (Saved, Cooked). Saved: Let's go / Tweak recipe / Delete. Cooked: dates + ratings, Cook it again / Delete.
+- **Not sure?** tab: cuisine dropdown (defaults to first favorite cuisine each app launch), cookbook-style list of ideas with "why" tags; tapping one → "Cook this" → Home flow prefilled.
+- **Profile**: "What Frankly remembers" stats + staples, Change preferences, Location & stores, Reset demo.
+- **Backend** (`supabase/`): schema with RLS (`migrations/`), Edge Functions `kroger-stores`, `recipe` (the agent), `suggest`. Shared code in `functions/_shared/`.
+- **Memory/learning:** every Claude request includes profile + last 25 cooked recipes with ratings and leftovers feedback + rejected dishes + remembered staples (`describeMemory()` in `_shared/common.ts`).
+- **Internal pantry:** staples bought for a recipe are saved to `pantry_items` on "I've finished"; the next recipe marks them "You already have this" and doesn't charge for them. No pantry screen (team decision).
 
-## Next (once the hackathon starts)
+## Next
 
-- [ ] **Team answers `docs/DECISIONS.md`.** Don't build until then. Then: one-shot the first demo from `docs/MVP.md`.
-- [ ] Create the Expo app in this repo and fill in "Run the app" in `CLAUDE.md`.
-- [ ] Add `.env.example` with variable names only.
-- [ ] Kroger Edge Function (teach Rick step by step, see `CLAUDE.md`).
+- [ ] Do Setup above, then run the full demo flow on a phone: onboarding → recipe → Let's go → I've finished → Cookbook → refresh app → history still there.
+- [ ] Partner: README push test (still pending).
+- [ ] Watch for Kroger search misses (wrong product picked). Fix by tuning the prompt's search-term rules in `supabase/functions/recipe/index.ts` or `relevant()` in `pricing.ts`.
+- [ ] Both: Devpost accounts, register for DubHacks 2026. Make the repo public before submitting.
+- [ ] Ideas the team deferred: see "Later" in `docs/DECISIONS.md`. Don't build them unless asked.
 
-## Known bugs
+## Known bugs / untested
 
-None yet.
+- Not yet run against live Supabase, Claude or Kroger (no keys yet). Expect small fixes on first real run.
+- Kroger app environment: `docs/KROGER.md` says to pick Production. If Kroger only offers Certification, the API host differs (`api-ce.kroger.com`) and has no real prices.
+- "Tweak recipe" creates a new draft; the original stays in Saved.
 
 ## Env vars
 
@@ -57,9 +74,10 @@ App (`.env`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`. Supab
 
 Newest first. Format: `date time — who — what changed (and anything the other Claude must know)`.
 
-- Oct 17 2:05 PM — Rick's Claude — Expo SDK 58 app scaffolded at repo root (expo-router). Supabase folder: schema migration, Edge Functions `kroger-stores`, `recipe` (the agent: Claude recipe → live Kroger pricing → best store, swaps, budget check), `suggest`. Pricing math in `supabase/functions/_shared/pricing.ts` with tests (`npx tsx scripts/test-pricing.ts`). Screens not built yet — next commit.
+- Oct 17 1:50 PM — Rick's Claude — **First demo built.** All screens (onboarding, 5 tabs, recipe, finish, cookbook books, preferences), data API (`src/lib/api.ts`), anonymous session (`src/lib/session.tsx`), design system (`src/components/ui.tsx`, `src/lib/theme.ts`). Added `docs/KROGER.md` (teaching guide), Setup steps above, `.claude/launch.json` for web preview. Verified: `npx tsc --noEmit`, pricing tests, web bundle, screens in browser with sample data. Not yet run against live services.
+- Oct 17 1:35 PM — Rick's Claude — Expo SDK 58 app scaffolded at repo root (expo-router). Supabase folder: schema migration, Edge Functions `kroger-stores`, `recipe` (the agent: Claude recipe → live Kroger pricing → best store, swaps, budget check), `suggest`. Pricing math in `supabase/functions/_shared/pricing.ts` with tests (`npx tsx scripts/test-pricing.ts`).
 - Oct 17 1:25 PM — Rick's Claude — Team answered DECISIONS.md: all approved except #5 (no pantry UI; pantry data internal only). Team overrode MVP: **live Kroger prices** (Kroger-family stores only). Bigger Cook Smarter tweaks deferred to "Later". Starting the one-shot build of the first demo.
-- Oct 17 1:05 PM — Rick's Claude — Saved the team's MVP doc as `docs/MVP.md`; added `docs/DECISIONS.md` (15 proposals, all Pending). Updated `CLAUDE.md`: MVP is source of truth, prices from a sample demo-store dataset, Kroger is stretch only, run suggestions past the team. No app code yet.
+- Oct 17 1:05 PM — Rick's Claude — Saved the team's MVP doc as `docs/MVP.md`; added `docs/DECISIONS.md` (15 proposals, all Pending). Updated `CLAUDE.md`: MVP is source of truth, run suggestions past the team. No app code yet.
 - Oct 17 2:15 AM — Rick's Claude — Added `docs/IDEA.md` (rough idea, Cook Smarter track, rubric, open questions). Updated `CLAUDE.md` with the track and the change-log rule. Nothing built yet; waiting on the MVP doc.
 - Oct 17 ~2:00 AM — Rick's Claude — Added `CLAUDE.md` and `HANDOFF.md`.
 - Oct 17 ~1:00 AM — Rick — README push test.

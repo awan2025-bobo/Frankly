@@ -18,7 +18,7 @@ Two people (Rick and his partner, GitHub `awan2025-bobo`) build this together, e
 
 An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, optional questions skippable) captures household, taste sliders, cuisines, diet, allergens, appliances and usual stores. Five tabs: Active Recipe, Cookbook (Saved + Cooked "books"), Home ("What would you like to cook today?"), "Don't know what to make?", Profile. The agent builds a recipe within budget, prices it with **live Kroger prices** at nearby Kroger-family stores (QFC, Fred Meyer), suggests cheaper swaps, remembers staples (pantry is internal only, no pantry screen), and stores feedback + cooked dates to improve future suggestions. Full spec: `docs/MVP.md`.
 
-**Status:** decisions answered (`docs/DECISIONS.md`). First demo being built by Rick's Claude. Deferred ideas are under "Later" in DECISIONS.md: don't build them unless the team asks.
+**Status:** first demo built (see `HANDOFF.md`). Not yet run against live services. Deferred ideas are under "Later" in `docs/DECISIONS.md`: don't build them unless the team asks.
 
 ## Stack
 
@@ -54,4 +54,14 @@ Step-by-step guide: `docs/KROGER.md`. Rick asked to be **taught** the Kroger API
 
 ## Run the app
 
-Not set up yet; the Expo project gets created once the hackathon starts. Fill this in when it exists (install command, `.env` setup, start command).
+First-time setup (Supabase, keys, deploy) is in `HANDOFF.md` → Setup. After that:
+
+```bash
+npm install
+npx expo start          # scan QR with Expo Go; add --web for the browser
+npx tsc --noEmit        # type-check the app
+npx tsx scripts/test-pricing.ts   # price-math tests
+npx supabase functions deploy recipe   # after changing an Edge Function
+```
+
+Layout: app screens in `src/app/` (expo-router; `(tabs)/` is the bottom bar), shared UI in `src/components/`, data calls in `src/lib/api.ts`. Backend in `supabase/` (`migrations/` = schema, `functions/` = Edge Functions, `functions/_shared/pricing.ts` = price math). Expo SDK 58: read `AGENTS.md` before touching Expo APIs; use `npx expo install` to add packages.

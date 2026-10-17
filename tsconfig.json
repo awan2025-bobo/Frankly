@@ -13,8 +13,11 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "supabase",
+    "scripts",
+    "node_modules"
   ]
 }
