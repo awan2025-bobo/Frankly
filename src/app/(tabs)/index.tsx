@@ -1,12 +1,13 @@
 // Home: "What would you like to cook today?" -> servings -> budget + leftovers -> preview -> recipe.
+// The kitchen stage (src/components/Veggies.tsx) animates along: veggies fly into a pot on submit,
+// the pot stays docked through the questions, sizzles while the recipe generates, then pops.
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
-import { Cooking } from '@/components/Cooking';
 import { Logo } from '@/components/Logo';
-import { FloatingVeggies } from '@/components/Veggies';
+import { VeggieStage, type StageMode } from '@/components/Veggies';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';
 import { generateRecipe } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -14,6 +15,15 @@ import { C, F } from '@/lib/theme';
 import type { Leftovers } from '@/lib/types';
 
 type Step = 'ask' | 'servings' | 'budget' | 'preview' | 'cooking';
+
+const AGENT_LINES = [
+  'Reading your tastes and kitchen…',
+  'Checking what you already have…',
+  'Writing your recipe…',
+  'Comparing prices at nearby stores…',
+  'Looking for cheaper swaps…',
+  'Plating it up…',
+];
 
 const greeting = () => {
   const h = new Date().getHours();
@@ -29,6 +39,38 @@ export default function Home() {
   const [budget, setBudget] = useState('');
   const [leftovers, setLeftovers] = useState<Leftovers>('some');
   const [problem, setProblem] = useState<string | null>(null);
+  const [finishedId, setFinishedId] = useState<string | null>(null);
+  const [line, setLine] = useState(0);
+  const askOpacity = useRef(new Animated.Value(1)).current;
+
+  // Fade the question out, then move on (the stage flies the veggies into the pot).
+  function submitDish() {
+    if (!dish.trim()) return;
+    Animated.timing(askOpacity, { toValue: 0, duration: 260, useNativeDriver: true }).start(() => setStep('servings'));
+  }
+
+  useEffect(() => {
+    if (step === 'ask') Animated.timing(askOpacity, { toValue: 1, duration: 320, useNativeDriver: true }).start();
+  }, [step, askOpacity]);
+
+  // Rotate the agent's status line while cooking.
+  useEffect(() => {
+    if (step !== 'cooking') return;
+    setLine(0);
+    const t = setInterval(() => setLine((n) => Math.min(n + 1, AGENT_LINES.length - 1)), 2600);
+    return () => clearInterval(t);
+  }, [step]);
+
+  const stage: StageMode = finishedId ? 'done' : step === 'ask' ? 'idle' : step === 'cooking' ? 'cooking' : 'docked';
+
+  function showRecipe() {
+    if (!finishedId) return;
+    router.push(`/recipe/${finishedId}`);
+    setFinishedId(null);
+    setStep('ask');
+    setDish('');
+    setBudget('');
+  }
 
   // Coming from "Not sure?" with a dish picked: jump straight to the questions.
   useEffect(() => {
@@ -51,39 +93,18 @@ export default function Home() {
         setStep('budget');
         return;
       }
-      router.push(`/recipe/${res.recipe.id}`);
-      setStep('ask');
-      setDish('');
-      setBudget('');
+      setFinishedId(res.recipe.id); // the pot pops, then showRecipe() runs
     } catch (e) {
       setProblem(e instanceof Error ? e.message : String(e));
       setStep('preview');
     }
   }
 
-  if (step === 'cooking') {
-    return (
-      <View style={{ flex: 1, backgroundColor: C.bg }}>
-        <Cooking
-          title="Cooking it up…"
-          lines={[
-            'Reading your tastes and kitchen',
-            'Checking what you already have',
-            'Writing your recipe',
-            'Comparing live prices at nearby stores',
-            'Looking for cheaper swaps',
-            'Plating it up',
-          ]}
-        />
-      </View>
-    );
-  }
-
   return (
-    <Screen style={{ flexGrow: 1 }}>
+    <View style={{ flex: 1, backgroundColor: C.bg }}>
+    <Screen style={{ flexGrow: 1, paddingBottom: step === 'ask' ? 120 : 200 }}>
       {step === 'ask' && (
-        <View style={{ flex: 1 }}>
-          <FloatingVeggies />
+        <Animated.View style={{ flex: 1, opacity: askOpacity }}>
           <Logo size={40} />
           <View style={st.askWrap}>
             <Muted style={{ textAlign: 'center' }}>
@@ -98,11 +119,11 @@ export default function Home() {
                 placeholderTextColor={C.faint}
                 style={st.askInput}
                 returnKeyType="go"
-                onSubmitEditing={() => dish.trim() && setStep('servings')}
+                onSubmitEditing={submitDish}
               />
               {/* Only appears once they've typed, for keyboards without a Go key. */}
               {dish.trim() ? (
-                <Pressable onPress={() => setStep('servings')} hitSlop={12} style={st.go} accessibilityLabel="Next">
+                <Pressable onPress={submitDish} hitSlop={12} style={st.go} accessibilityLabel="Next">
                   <Ionicons name="arrow-forward" size={18} color={C.onPrimary} />
                 </Pressable>
               ) : null}
@@ -111,10 +132,10 @@ export default function Home() {
               <Muted style={{ textDecorationLine: 'underline' }}>Not sure what to cook?</Muted>
             </Pressable>
           </View>
-        </View>
+        </Animated.View>
       )}
 
-      {step !== 'ask' && (
+      {step !== 'ask' && step !== 'cooking' && (
         <Pressable onPress={() => setStep(step === 'servings' ? 'ask' : step === 'budget' ? 'servings' : 'budget')} style={st.back}>
           <Ionicons name="chevron-back" size={20} color={C.muted} />
           <Muted>Back</Muted>
@@ -191,6 +212,8 @@ export default function Home() {
         actions={[{ label: 'Change my request', onPress: () => setProblem(null) }]}
       />
     </Screen>
+    <VeggieStage mode={stage} caption={step === 'cooking' ? AGENT_LINES[line] : undefined} onDone={showRecipe} />
+    </View>
   );
 }
 
