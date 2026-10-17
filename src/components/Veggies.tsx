@@ -1,6 +1,7 @@
 // Home's kitchen stage: flat clipart vegetables (DubHacks kitchen style) and a cooking pot.
 //   idle    -> vegetables bob and drift around the edges
 //   docked  -> a pot glides up from the bottom and the vegetables fly into it
+//   away    -> the pot drops out of the overlay (the preview slide shows <InlinePot/> at the end of its content)
 //   cooking -> the pot moves to the center and sizzles: jitter, bubbles, steam, popping droplets
 //   done    -> a quick "pop" with a little burst, then onDone() so Home can show the recipe
 // Purely decorative: it never blocks touches.
@@ -117,7 +118,7 @@ const SPOTS: Spot[] = [
 const POT = 150; // pot width in px
 const native = true;
 
-export type StageMode = 'idle' | 'docked' | 'cooking' | 'done';
+export type StageMode = 'idle' | 'docked' | 'away' | 'cooking' | 'done';
 
 function Floater({ spot, index, target, gathered }: { spot: Spot; index: number; target: { x: number; y: number } | null; gathered: boolean }) {
   const bob = useRef(new Animated.Value(0)).current;
@@ -311,6 +312,39 @@ function Burst({ fire }: { fire: number }) {
   );
 }
 
+/** The pot sitting at the end of a scrolling page (the preview slide). It zooms down into place and bobs a little. */
+export function InlinePot() {
+  const enter = useRef(new Animated.Value(0)).current;
+  const bob = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.spring(enter, { toValue: 1, useNativeDriver: native, speed: 8, bounciness: 9 }).start();
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(bob, { toValue: 1, duration: 1400, easing: Easing.inOut(Easing.sin), useNativeDriver: native }),
+        Animated.timing(bob, { toValue: 0, duration: 1400, easing: Easing.inOut(Easing.sin), useNativeDriver: native }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [enter, bob]);
+  return (
+    <Animated.View
+      style={{
+        alignSelf: 'center',
+        width: POT,
+        height: POT * 0.84,
+        marginTop: 12,
+        opacity: enter,
+        transform: [
+          { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [-160, 0] }), bob.interpolate({ inputRange: [0, 1], outputRange: [0, -5] })) },
+          { scale: enter.interpolate({ inputRange: [0, 1], outputRange: [1.3, 1] }) },
+        ],
+      }}>
+      <Pot />
+    </Animated.View>
+  );
+}
+
 export function VeggieStage({
   mode,
   caption,
@@ -323,6 +357,7 @@ export function VeggieStage({
   const [size, setSize] = useState<{ w: number; h: number } | null>(null);
   const potY = useRef(new Animated.Value(0)).current; // 0 = hidden below, 1 = docked, 2 = center
   const potScale = useRef(new Animated.Value(1)).current;
+  const potOpacity = useRef(new Animated.Value(1)).current;
   const jitter = useRef(new Animated.Value(0)).current;
   const captionOpacity = useRef(new Animated.Value(0)).current;
   const [burst, setBurst] = useState(0);
@@ -337,11 +372,13 @@ export function VeggieStage({
 
   // Pot position + scale per mode.
   useEffect(() => {
-    const to = mode === 'idle' ? 0 : mode === 'docked' ? 1 : 2;
-    Animated.spring(potY, { toValue: to, useNativeDriver: native, speed: 9, bounciness: mode === 'idle' ? 0 : 7 }).start();
+    const to = mode === 'idle' || mode === 'away' ? 0 : mode === 'docked' ? 1 : 2;
+    Animated.spring(potY, { toValue: to, useNativeDriver: native, speed: mode === 'away' ? 14 : 9, bounciness: mode === 'idle' || mode === 'away' ? 0 : 7 }).start();
     Animated.spring(potScale, { toValue: mode === 'cooking' || mode === 'done' ? 1.35 : 1, useNativeDriver: native, speed: 10, bounciness: 6 }).start();
     Animated.timing(captionOpacity, { toValue: mode === 'cooking' ? 1 : 0, duration: 300, useNativeDriver: native }).start();
-  }, [mode, potY, potScale, captionOpacity]);
+    // Fade out as it drops away, so it never lingers behind the preview slide's inline pot.
+    Animated.timing(potOpacity, { toValue: mode === 'away' ? 0 : 1, duration: mode === 'away' ? 260 : 120, useNativeDriver: native }).start();
+  }, [mode, potY, potScale, captionOpacity, potOpacity]);
 
   // Sizzle: tiny fast jitter while cooking.
   useEffect(() => {
@@ -387,6 +424,7 @@ export function VeggieStage({
           top: 0,
           width: POT,
           height: POT * 0.84,
+          opacity: potOpacity,
           transform: [
             { translateY },
             { translateX: jitter.interpolate({ inputRange: [-1, 1], outputRange: [-1.6, 1.6] }) },

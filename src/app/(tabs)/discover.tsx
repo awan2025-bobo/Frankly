@@ -1,11 +1,14 @@
 // "Don't know what to make today?" Ideas from the What-should-I-make agent, shown as a stack of cookbooks.
-//   - The cuisine dropdown stays pinned at the top.
-//   - Scrolling turns the stack like a wheel: books tilt away as they move off-center.
-//   - Tapping a book pulls it out of the stack to the center, and its cover swings open to show the details.
+//   - The list snaps so one book is always centered. The centered book straightens and grows into a
+//     squarer card that shows more; the others stay short, tilted spines that turn away like a wheel.
+//   - The first book starts centered. The header starts big above it and compresses upward as you
+//     scroll (back to big at the first book). The cuisine dropdown is always visible.
+//   - Tap an off-center book to bring it to the center; tap the centered book to open it: it flies
+//     to the middle and its cover swings open to the details.
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Easing, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Body, Button, Card, H1, Muted, Pill, Sheet } from '@/components/ui';
@@ -30,9 +33,12 @@ const TAGS: Record<Suggestion['tag'], string> = {
 const COVERS = [C.primary, C.accent, '#8A8463', C.good, '#9C6B45', '#5E6B47'];
 const TILT = [-1.6, 1.2, -0.6, 1.8, -1.2, 0.8, -1.8, 1.4];
 const SHIFT = [-6, 8, -2, 10, -8, 4, -4, 6];
-const BOOK_H = 96;
-const GAP = 10;
-const LIST_TOP = 16;
+
+// Wheel geometry: every book gets a fixed slot, and the scroll snaps to slots.
+const SLOT = 118;
+const SMALL = 92;
+const BIG = 236;
+const HEADER_MIN = 124;
 
 type Rect = { x: number; y: number; w: number; h: number };
 
@@ -43,8 +49,10 @@ export default function Discover() {
   const [dishes, setDishes] = useState<Suggestion[] | null>(cache.get(cuisine) ?? null);
   const [open, setOpen] = useState<{ dish: Suggestion; color: string; tilt: number; from: Rect } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [viewH, setViewH] = useState(600);
+  const [viewH, setViewH] = useState(640);
+  const [centered, setCentered] = useState(0);
   const scrollY = useRef(new Animated.Value(0)).current;
+  const scrollRef = useRef<ScrollView>(null);
 
   const load = useCallback(async (c: string, force = false) => {
     setError(null);
@@ -65,53 +73,89 @@ export default function Discover() {
   useEffect(() => {
     launchCuisine = cuisine;
     load(cuisine);
+    scrollRef.current?.scrollTo({ y: 0, animated: false });
   }, [cuisine, load]);
+
+  // Track which book is centered (it draws on top of its neighbors).
+  useEffect(() => {
+    const id = scrollY.addListener(({ value }) => setCentered(Math.max(0, Math.round(value / SLOT))));
+    return () => scrollY.removeListener(id);
+  }, [scrollY]);
 
   const mine = profile?.cuisines ?? [];
   const options = ['Any', ...mine, ...CUISINES.filter((c) => !mine.includes(c))];
 
+  // The wheel's center line sits a bit below the middle so the big header fits above the first book.
+  const centerY = viewH * 0.57;
+  const headerMax = Math.max(HEADER_MIN + 40, centerY - BIG / 2 - 14);
+  const padTop = centerY - SLOT / 2;
+  const padBottom = Math.max(viewH - centerY - SLOT / 2, 80);
+
+  // Header starts big (first book centered), then compresses upward as you scroll.
+  const collapse = scrollY.interpolate({ inputRange: [0, SLOT], outputRange: [0, 1], extrapolate: 'clamp' });
+  const headerH = collapse.interpolate({ inputRange: [0, 1], outputRange: [headerMax, HEADER_MIN] });
+  const titleSize = collapse.interpolate({ inputRange: [0, 1], outputRange: [40, 28] });
+  const titleLine = collapse.interpolate({ inputRange: [0, 1], outputRange: [44, 34] });
+  const subOpacity = collapse.interpolate({ inputRange: [0, 0.6], outputRange: [1, 0], extrapolate: 'clamp' });
+  const subHeight = collapse.interpolate({ inputRange: [0, 0.8], outputRange: [42, 0], extrapolate: 'clamp' });
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: C.bg }} edges={['top']}>
-      {/* Pinned header: stays on top while the books scroll underneath */}
-      <View style={st.header}>
-        <H1 style={{ fontSize: 28, lineHeight: 34 }}>Not sure what to make?</H1>
-        <Pressable onPress={() => setPicker(true)} style={st.dropdown}>
-          <Ionicons name="globe-outline" size={18} color={C.muted} />
-          <Text style={st.dropdownText}>{cuisine === 'Any' ? 'Any cuisine' : cuisine}</Text>
-          <Ionicons name="chevron-down" size={18} color={C.ink} />
-        </Pressable>
-      </View>
+      <View style={{ flex: 1 }} onLayout={(e) => setViewH(e.nativeEvent.layout.height)}>
+        <Animated.ScrollView
+          ref={scrollRef}
+          style={StyleSheet.absoluteFill}
+          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+          scrollEventThrottle={16}
+          snapToInterval={SLOT}
+          decelerationRate="fast"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={[st.list, { paddingTop: padTop, paddingBottom: padBottom }]}>
+          {error && (
+            <Card>
+              <Muted style={{ color: C.bad }}>{error}</Muted>
+              <Button title="Try again" kind="secondary" onPress={() => load(cuisine, true)} />
+            </Card>
+          )}
+          {!dishes && !error && (
+            <View style={{ alignItems: 'center', gap: 8, height: SLOT, justifyContent: 'center' }}>
+              <ActivityIndicator color={C.primary} />
+              <Muted>Pulling cookbooks off the shelf…</Muted>
+            </View>
+          )}
+          {dishes?.map((d, i) => (
+            <Book
+              key={d.name}
+              dish={d}
+              index={i}
+              scrollY={scrollY}
+              front={i === centered}
+              hidden={open?.dish.name === d.name}
+              onTap={(from) => {
+                if (i !== centered) scrollRef.current?.scrollTo({ y: i * SLOT, animated: true });
+                else setOpen({ dish: d, color: COVERS[i % COVERS.length], tilt: 0, from });
+              }}
+            />
+          ))}
+          {dishes && (
+            <Button title="Show me different ideas" kind="ghost" icon="refresh" onPress={() => load(cuisine, true)} style={{ marginTop: 18 }} />
+          )}
+        </Animated.ScrollView>
 
-      <Animated.ScrollView
-        onLayout={(e) => setViewH(e.nativeEvent.layout.height)}
-        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: true })}
-        scrollEventThrottle={16}
-        contentContainerStyle={st.list}>
-        {error && (
-          <Card>
-            <Muted style={{ color: C.bad }}>{error}</Muted>
-            <Button title="Try again" kind="secondary" onPress={() => load(cuisine, true)} />
-          </Card>
-        )}
-        {!dishes && !error && (
-          <View style={{ alignItems: 'center', gap: 8, paddingVertical: 40 }}>
-            <ActivityIndicator color={C.primary} />
-            <Muted>Pulling cookbooks off the shelf…</Muted>
-          </View>
-        )}
-        {dishes?.map((d, i) => (
-          <Book
-            key={d.name}
-            dish={d}
-            index={i}
-            scrollY={scrollY}
-            viewH={viewH}
-            hidden={open?.dish.name === d.name}
-            onOpen={(from) => setOpen({ dish: d, color: COVERS[i % COVERS.length], tilt: TILT[i % TILT.length], from })}
-          />
-        ))}
-        {dishes && <Button title="Show me different ideas" kind="ghost" icon="refresh" onPress={() => load(cuisine, true)} style={{ marginTop: 12 }} />}
-      </Animated.ScrollView>
+        {/* Header: big at first, compresses upward as you scroll, comes back at the first book */}
+        <Animated.View style={[st.header, { height: headerH }]}>
+          <Animated.Text style={[st.title, { fontSize: titleSize, lineHeight: titleLine }]}>Not sure what to make?</Animated.Text>
+          <Animated.Text style={[st.sub, { opacity: subOpacity, maxHeight: subHeight }]} numberOfLines={2}>
+            Ideas from your tastes, your ratings, and what you haven&apos;t cooked in a while.
+          </Animated.Text>
+          <View style={{ flex: 1 }} />
+          <Pressable onPress={() => setPicker(true)} style={st.dropdown}>
+            <Ionicons name="globe-outline" size={18} color={C.muted} />
+            <Text style={st.dropdownText}>{cuisine === 'Any' ? 'Any cuisine' : cuisine}</Text>
+            <Ionicons name="chevron-down" size={18} color={C.ink} />
+          </Pressable>
+        </Animated.View>
+      </View>
 
       <Sheet visible={picker} onClose={() => setPicker(false)} title="Cuisine">
         <View style={{ gap: 6 }}>
@@ -144,83 +188,100 @@ export default function Discover() {
   );
 }
 
-/** One cookbook lying in the stack: you see its spine. Tilts away like a wheel as it leaves the center. */
+/**
+ * One cookbook in the stack. Off-center it's a short tilted spine; as it reaches the center it
+ * straightens, stands upright and grows into a squarer card that shows more.
+ */
 function Book({
   dish,
   index,
   scrollY,
-  viewH,
+  front,
   hidden,
-  onOpen,
+  onTap,
 }: {
   dish: Suggestion;
   index: number;
   scrollY: Animated.Value;
-  viewH: number;
+  front: boolean;
   hidden: boolean;
-  onOpen: (from: Rect) => void;
+  onTap: (from: Rect) => void;
 }) {
   const ref = useRef<View>(null);
   const press = useRef(new Animated.Value(0)).current;
   const color = COVERS[index % COVERS.length];
+  const tilt = TILT[index % TILT.length];
+  const shift = SHIFT[index % SHIFT.length];
 
-  // When this book sits in the middle of the screen, scrollY equals `mid`.
-  const mid = LIST_TOP + index * (BOOK_H + GAP) + BOOK_H / 2 - viewH / 2;
-  const span = viewH * 0.55;
-  const input = [mid - span, mid, mid + span];
-  const rotateX = scrollY.interpolate({ inputRange: input, outputRange: ['-42deg', '0deg', '42deg'], extrapolate: 'clamp' });
-  const scale = scrollY.interpolate({ inputRange: input, outputRange: [0.9, 1, 0.9], extrapolate: 'clamp' });
-  const opacity = scrollY.interpolate({ inputRange: input, outputRange: [0.75, 1, 0.75], extrapolate: 'clamp' });
+  const c = index * SLOT; // scroll offset where this book is centered
+  const near = [c - SLOT, c, c + SLOT];
+  const far = [c - 2 * SLOT, c - SLOT, c, c + SLOT, c + 2 * SLOT];
+  const height = scrollY.interpolate({ inputRange: near, outputRange: [SMALL, BIG, SMALL], extrapolate: 'clamp' });
+  const marginLeft = scrollY.interpolate({ inputRange: near, outputRange: [12 + shift, 30, 12 + shift], extrapolate: 'clamp' });
+  const marginRight = scrollY.interpolate({ inputRange: near, outputRange: [12 - shift, 30, 12 - shift], extrapolate: 'clamp' });
+  const rotateX = scrollY.interpolate({ inputRange: far, outputRange: ['-40deg', '-20deg', '0deg', '20deg', '40deg'], extrapolate: 'clamp' });
+  const rotate = scrollY.interpolate({ inputRange: near, outputRange: [`${tilt}deg`, '0deg', `${tilt}deg`], extrapolate: 'clamp' });
+  const scale = scrollY.interpolate({ inputRange: far, outputRange: [0.86, 0.94, 1, 0.94, 0.86], extrapolate: 'clamp' });
+  const opacity = scrollY.interpolate({ inputRange: far, outputRange: [0.5, 0.8, 1, 0.8, 0.5], extrapolate: 'clamp' });
+  const extra = scrollY.interpolate({ inputRange: [c - SLOT * 0.6, c, c + SLOT * 0.6], outputRange: [0, 1, 0], extrapolate: 'clamp' });
   const lift = press.interpolate({ inputRange: [0, 1], outputRange: [0, -6] });
 
-  const tap = () =>
-    ref.current?.measureInWindow((x, y, w, h) => onOpen({ x, y, w, h }));
+  const tap = () => ref.current?.measureInWindow((x, y, w, h) => onTap({ x, y, w, h }));
 
   return (
-    <Pressable
-      onPressIn={() => Animated.spring(press, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 12 }).start()}
-      onPressOut={() => Animated.spring(press, { toValue: 0, useNativeDriver: true, speed: 30, bounciness: 12 }).start()}
-      onPress={tap}>
-      <Animated.View
-        ref={ref}
-        style={[
-          st.spine,
-          {
-            backgroundColor: color,
-            opacity: hidden ? 0 : opacity,
-            marginLeft: 10 + SHIFT[index % SHIFT.length],
-            marginRight: 10 - SHIFT[index % SHIFT.length],
-            transform: [
-              { perspective: 900 },
-              { rotateX },
-              { scale },
-              { translateY: lift },
-              { rotate: `${TILT[index % TILT.length]}deg` },
-            ],
-          },
-        ]}>
-        <View style={st.band} />
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text style={st.spineTitle} numberOfLines={1}>
-            {dish.name}
-          </Text>
-          <Text style={st.spineBlurb} numberOfLines={1}>
-            {dish.description}
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
-            <View style={st.spineTag}>
-              <Text style={st.spineTagText}>{TAGS[dish.tag]}</Text>
+    <View style={[st.slot, { zIndex: front ? 10 : 1 }]}>
+      <Pressable
+        onPressIn={() => Animated.spring(press, { toValue: 1, useNativeDriver: false, speed: 30, bounciness: 12 }).start()}
+        onPressOut={() => Animated.spring(press, { toValue: 0, useNativeDriver: false, speed: 30, bounciness: 12 }).start()}
+        onPress={tap}>
+        <Animated.View
+          ref={ref}
+          style={[
+            st.spine,
+            {
+              height,
+              marginLeft,
+              marginRight,
+              backgroundColor: color,
+              opacity: hidden ? 0 : opacity,
+              transform: [{ perspective: 900 }, { rotateX }, { scale }, { translateY: lift }, { rotate }],
+            },
+          ]}>
+          <View style={st.spineRow}>
+            <View style={st.band} />
+            <View style={{ flex: 1, gap: 4 }}>
+              <Text style={st.spineTitle} numberOfLines={1}>
+                {dish.name}
+              </Text>
+              <Text style={st.spineBlurb} numberOfLines={1}>
+                {dish.description}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <View style={st.spineTag}>
+                  <Text style={st.spineTagText}>{TAGS[dish.tag]}</Text>
+                </View>
+                <View style={st.spineTag}>
+                  <Ionicons name="time-outline" size={11} color={C.onPrimary} />
+                  <Text style={st.spineTagText}>{dish.total_minutes} min</Text>
+                </View>
+              </View>
             </View>
-            <View style={st.spineTag}>
-              <Ionicons name="time-outline" size={11} color={C.onPrimary} />
-              <Text style={st.spineTagText}>{dish.total_minutes} min</Text>
-            </View>
+            <View style={[st.band, { marginLeft: 0, marginRight: 4 }]} />
           </View>
-        </View>
-        <View style={[st.band, { marginLeft: 0, marginRight: 4 }]} />
-        <View style={st.pages} />
-      </Animated.View>
-    </Pressable>
+          {/* more detail, revealed as the book reaches the center */}
+          <Animated.View style={[st.extra, { opacity: extra }]}>
+            <Text style={st.extraWhy} numberOfLines={3}>
+              {dish.why}
+            </Text>
+            <View style={st.openHint}>
+              <Ionicons name="book-outline" size={14} color={C.onPrimary} />
+              <Text style={st.openHintText}>Tap to open</Text>
+            </View>
+          </Animated.View>
+          <View style={st.pages} />
+        </Animated.View>
+      </Pressable>
+    </View>
   );
 }
 
@@ -253,10 +314,11 @@ function OpenBook({
     ]).start();
   }, [fly, cover]);
 
+  // Same animation in reverse, but quicker on the way out.
   const close = () =>
     Animated.sequence([
-      Animated.timing(cover, { toValue: 0, duration: 380, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
-      Animated.timing(fly, { toValue: 0, duration: 320, easing: Easing.in(Easing.cubic), useNativeDriver: false }),
+      Animated.timing(cover, { toValue: 0, duration: 220, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
+      Animated.timing(fly, { toValue: 0, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: false }),
     ]).start(onClose);
 
   const box = {
@@ -317,7 +379,21 @@ function OpenBook({
 }
 
 const st = StyleSheet.create({
-  header: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12, gap: 10, backgroundColor: C.bg, zIndex: 2 },
+  header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 12,
+    gap: 8,
+    backgroundColor: C.bg,
+    zIndex: 20,
+    overflow: 'hidden',
+  },
+  title: { fontFamily: F.display, color: C.ink },
+  sub: { fontFamily: F.body, fontSize: 14, lineHeight: 20, color: C.muted },
   dropdown: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -328,27 +404,29 @@ const st = StyleSheet.create({
     paddingVertical: 13,
   },
   dropdownText: { flex: 1, fontFamily: F.medium, fontSize: 16, color: C.ink },
-  list: { paddingTop: LIST_TOP, paddingBottom: 160, paddingHorizontal: 10, gap: GAP, maxWidth: 640, width: '100%', alignSelf: 'center' },
+  list: { paddingHorizontal: 0, maxWidth: 640, width: '100%', alignSelf: 'center' },
   option: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14, borderRadius: R.md, backgroundColor: C.cardAlt },
   optionText: { fontFamily: F.medium, fontSize: 15, color: C.ink },
 
+  // Fixed-height slot; the book inside can grow past it (centered) to overlap its neighbors.
+  slot: { height: SLOT, justifyContent: 'center' },
   spine: {
-    height: BOOK_H,
-    borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    gap: 12,
+    borderRadius: 10,
     overflow: 'hidden',
     ...shadow,
-    shadowOpacity: 0.14,
+    shadowOpacity: 0.16,
   },
+  spineRow: { height: SMALL, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 12 },
   band: { width: 4, alignSelf: 'stretch', marginVertical: 12, marginLeft: 4, borderRadius: 2, backgroundColor: 'rgba(238,232,220,0.35)' },
   pages: { position: 'absolute', right: 0, top: 6, bottom: 6, width: 6, backgroundColor: 'rgba(238,232,220,0.55)', borderTopLeftRadius: 2, borderBottomLeftRadius: 2 },
   spineTitle: { fontFamily: F.display, fontSize: 20, color: C.onPrimary },
   spineBlurb: { fontFamily: F.body, fontSize: 12.5, color: 'rgba(238,232,220,0.8)' },
   spineTag: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: 999, paddingHorizontal: 8, paddingVertical: 2, backgroundColor: 'rgba(238,232,220,0.18)' },
   spineTagText: { fontFamily: F.medium, fontSize: 11, color: C.onPrimary },
+  extra: { paddingHorizontal: 34, paddingBottom: 18, gap: 12, flex: 1, justifyContent: 'space-between' },
+  extraWhy: { fontFamily: F.body, fontSize: 14, lineHeight: 20, color: C.onPrimary },
+  openHint: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(238,232,220,0.2)' },
+  openHintText: { fontFamily: F.bold, fontSize: 12, color: C.onPrimary },
 
   page: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, flexDirection: 'row', backgroundColor: C.card, borderRadius: 14, overflow: 'hidden', ...shadow, shadowOpacity: 0.2 },
   pageSpine: { width: 10 },

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Logo } from '@/components/Logo';
-import { VeggieStage, type StageMode } from '@/components/Veggies';
+import { InlinePot, VeggieStage, type StageMode } from '@/components/Veggies';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';
 import { generateRecipe } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -61,7 +61,8 @@ export default function Home() {
     return () => clearInterval(t);
   }, [step]);
 
-  const stage: StageMode = finishedId ? 'done' : step === 'ask' ? 'idle' : step === 'cooking' ? 'cooking' : 'docked';
+  // On the long preview slide the pot leaves the overlay and sits at the end of the content instead.
+  const stage: StageMode = finishedId ? 'done' : step === 'ask' ? 'idle' : step === 'cooking' ? 'cooking' : step === 'preview' ? 'away' : 'docked';
 
   function showRecipe() {
     if (!finishedId) return;
@@ -102,7 +103,7 @@ export default function Home() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bg }}>
-    <Screen style={{ flexGrow: 1, paddingBottom: step === 'ask' ? 120 : 200 }}>
+    <Screen style={{ flexGrow: 1, paddingBottom: step === 'ask' || step === 'preview' ? 120 : 200 }}>
       {step === 'ask' && (
         <Animated.View style={{ flex: 1, opacity: askOpacity }}>
           <Logo size={40} />
@@ -201,6 +202,7 @@ export default function Home() {
           <H2>Looks right?</H2>
           <Button title="Yes, cook it up" icon="flame" onPress={cook} />
           <Button title="Change preferences" kind="secondary" onPress={() => router.push('/preferences')} />
+          <InlinePot />
         </View>
       )}
 
