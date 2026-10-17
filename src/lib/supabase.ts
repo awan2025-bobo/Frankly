@@ -7,6 +7,9 @@ const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
 export const supabaseConfigured = Boolean(url && key);
 
+// No keys yet -> DEMO MODE: the whole app runs on the phone with sample data (src/lib/demo.ts).
+export const DEMO = !supabaseConfigured;
+
 // Only the public URL + anon key live in the app. Claude and Kroger keys stay in Edge Functions.
 export const supabase = createClient(url || 'https://missing.supabase.co', key || 'missing', {
   auth: {

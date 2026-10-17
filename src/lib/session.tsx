@@ -2,7 +2,8 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
 import { getProfile, saveProfile } from './api';
-import { supabase, supabaseConfigured } from './supabase';
+import { resetDemoData } from './demo';
+import { DEMO, supabase } from './supabase';
 import type { Profile } from './types';
 
 type Session = {
@@ -25,7 +26,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const boot = useCallback(async () => {
     setError(null);
     try {
-      if (!supabaseConfigured) throw new Error('Supabase keys missing. Copy .env.example to .env and fill it in.');
+      if (DEMO) {
+        // No .env keys: run on-device with sample data (src/lib/demo.ts).
+        setUserId('demo-user');
+        setProfile(await getProfile());
+        return;
+      }
       let { data } = await supabase.auth.getSession();
       if (!data.session) {
         const res = await supabase.auth.signInAnonymously();
@@ -56,7 +62,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 
   const resetDemo = useCallback(async () => {
-    await supabase.auth.signOut();
+    if (DEMO) await resetDemoData();
+    else await supabase.auth.signOut();
     setProfile(null);
     setReady(false);
     await boot();

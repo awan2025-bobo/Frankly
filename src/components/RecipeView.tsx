@@ -85,7 +85,11 @@ export function RecipeView({ data }: { data: RecipeData }) {
             );
           })}
         </View>
-        <Muted style={{ fontSize: 12 }}>Live Kroger prices, checked at {pricedAt}. Prices can change in store.</Muted>
+        <Muted style={{ fontSize: 12 }}>
+          {data.demo
+            ? 'Demo mode: sample prices at demo stores. Connect Kroger for live prices.'
+            : `Live Kroger prices, checked at ${pricedAt}. Prices can change in store.`}
+        </Muted>
       </Card>
 
       {/* Why */}

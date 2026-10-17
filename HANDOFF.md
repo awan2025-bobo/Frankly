@@ -4,7 +4,7 @@ Update this before you stop working, then commit and push. Newest status at the 
 
 **Every commit adds a line to the Change log at the bottom**, in the same commit, so the other Claude knows what happened.
 
-_Last updated: Sat Oct 17, 2026, 1:50 PM by Rick's Claude._
+_Last updated: Sat Oct 17, 2026, 2:20 PM by Rick's Claude._
 
 ## Who owns what
 
@@ -16,6 +16,8 @@ _Last updated: Sat Oct 17, 2026, 1:50 PM by Rick's Claude._
 Change this table if you swap areas.
 
 ## Status
+
+**Demo mode:** run `npx expo start` with no `.env` and the app works end to end on a phone with sample data (labeled "Demo mode · sample prices"). Good for testing UI/flow before the backend is set up.
 
 **First demo is built** (one-shot from `docs/MVP.md` + `docs/DECISIONS.md`). It type-checks, bundles, and the screens were checked in a web preview with sample data. **It has NOT run against real Supabase/Claude/Kroger yet**, because the keys don't exist yet. Do the Setup below, then test the full flow on a phone.
 
@@ -74,6 +76,7 @@ App (`.env`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`. Supab
 
 Newest first. Format: `date time — who — what changed (and anything the other Claude must know)`.
 
+- Oct 17 2:20 PM — Rick's Claude — **Demo mode** (`src/lib/demo.ts`): with no `.env` keys the whole app runs on the phone with sample recipes, clearly labeled SAMPLE prices at 3 demo stores, and data saved on-device (persists across reloads). `src/lib/api.ts` routes every call to demo when `DEMO` is true (`src/lib/supabase.ts`). Adding real keys turns it off automatically. Tested full flow in web preview: onboarding → recipe → over-budget popup → Let's go → I've finished → Cooked → reload persists → 2nd recipe remembers staples and adjusts for leftovers feedback.
 - Oct 17 1:50 PM — Rick's Claude — **First demo built.** All screens (onboarding, 5 tabs, recipe, finish, cookbook books, preferences), data API (`src/lib/api.ts`), anonymous session (`src/lib/session.tsx`), design system (`src/components/ui.tsx`, `src/lib/theme.ts`). Added `docs/KROGER.md` (teaching guide), Setup steps above, `.claude/launch.json` for web preview. Verified: `npx tsc --noEmit`, pricing tests, web bundle, screens in browser with sample data. Not yet run against live services.
 - Oct 17 1:35 PM — Rick's Claude — Expo SDK 58 app scaffolded at repo root (expo-router). Supabase folder: schema migration, Edge Functions `kroger-stores`, `recipe` (the agent: Claude recipe → live Kroger pricing → best store, swaps, budget check), `suggest`. Pricing math in `supabase/functions/_shared/pricing.ts` with tests (`npx tsx scripts/test-pricing.ts`).
 - Oct 17 1:25 PM — Rick's Claude — Team answered DECISIONS.md: all approved except #5 (no pantry UI; pantry data internal only). Team overrode MVP: **live Kroger prices** (Kroger-family stores only). Bigger Cook Smarter tweaks deferred to "Later". Starting the one-shot build of the first demo.

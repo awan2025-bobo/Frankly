@@ -1,7 +1,8 @@
 // Every read/write the app makes. Screens call these instead of touching Supabase directly.
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
-import { supabase } from './supabase';
+import * as demo from './demo';
+import { DEMO, supabase } from './supabase';
 import type { Feedback, KrogerStore, Leftovers, Profile, Recipe, Suggestion } from './types';
 
 async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
@@ -29,14 +30,17 @@ export type RecipeRequest = {
 
 /** Returns either a saved draft recipe or a `problem` to show in the "try again" popup. */
 export function generateRecipe(req: RecipeRequest) {
+  if (DEMO) return demo.generateRecipe(req);
   return invoke<{ recipe?: Recipe; problem?: string }>('recipe', req);
 }
 
 export function suggestDishes(cuisine: string) {
+  if (DEMO) return demo.suggestDishes(cuisine);
   return invoke<{ dishes: Suggestion[] }>('suggest', { cuisine });
 }
 
 export function findStores(near: { zip?: string; lat?: number; lng?: number }) {
+  if (DEMO) return demo.findStores(near);
   return invoke<{ stores: KrogerStore[]; origin: { lat: number; lng: number } | null; message?: string }>(
     'kroger-stores',
     near,
@@ -46,12 +50,14 @@ export function findStores(near: { zip?: string; lat?: number; lng?: number }) {
 // ---------- Profile ----------
 
 export async function getProfile(): Promise<Profile | null> {
+  if (DEMO) return demo.getProfile();
   const { data, error } = await supabase.from('profiles').select('*').maybeSingle();
   if (error) throw error;
   return data as Profile | null;
 }
 
 export async function saveProfile(userId: string, patch: Partial<Profile>): Promise<Profile> {
+  if (DEMO) return demo.saveProfile(patch);
   const { data, error } = await supabase
     .from('profiles')
     .upsert({ ...patch, id: userId, updated_at: new Date().toISOString() })
@@ -64,12 +70,14 @@ export async function saveProfile(userId: string, patch: Partial<Profile>): Prom
 // ---------- Recipes ----------
 
 export async function getRecipe(id: string): Promise<Recipe | null> {
+  if (DEMO) return demo.getRecipe(id);
   const { data, error } = await supabase.from('recipes').select('*').eq('id', id).maybeSingle();
   if (error) throw error;
   return data as Recipe | null;
 }
 
 export async function getActiveRecipe(): Promise<Recipe | null> {
+  if (DEMO) return demo.getActiveRecipe();
   const { data, error } = await supabase
     .from('recipes')
     .select('*')
@@ -82,6 +90,7 @@ export async function getActiveRecipe(): Promise<Recipe | null> {
 }
 
 export async function listRecipes(status: 'saved' | 'cooked'): Promise<Recipe[]> {
+  if (DEMO) return demo.listRecipes(status);
   const { data, error } = await supabase
     .from('recipes')
     .select('*')
@@ -92,6 +101,7 @@ export async function listRecipes(status: 'saved' | 'cooked'): Promise<Recipe[]>
 }
 
 export async function countRecipes(): Promise<{ saved: number; cooked: number }> {
+  if (DEMO) return demo.countRecipes();
   const [saved, cooked] = await Promise.all(
     (['saved', 'cooked'] as const).map((status) =>
       supabase.from('recipes').select('id', { count: 'exact', head: true }).eq('status', status),
@@ -111,6 +121,7 @@ async function setStatus(id: string, status: Recipe['status'], extra: Partial<Re
  * Returns the id of the now-active recipe.
  */
 export async function startRecipe(recipe: Recipe): Promise<string> {
+  if (DEMO) return demo.startRecipe(recipe);
   const { error } = await supabase
     .from('recipes')
     .update({ status: 'saved' })
@@ -141,10 +152,11 @@ export async function startRecipe(recipe: Recipe): Promise<string> {
   return recipe.id;
 }
 
-export const saveForLater = (id: string) => setStatus(id, 'saved');
-export const dismissRecipe = (id: string) => setStatus(id, 'dismissed');
+export const saveForLater = (id: string) => (DEMO ? demo.saveForLater(id) : setStatus(id, 'saved'));
+export const dismissRecipe = (id: string) => (DEMO ? demo.dismissRecipe(id) : setStatus(id, 'dismissed'));
 
 export async function deleteRecipe(id: string) {
+  if (DEMO) return demo.deleteRecipe(id);
   const { error } = await supabase.from('recipes').delete().eq('id', id);
   if (error) throw error;
 }
@@ -154,6 +166,7 @@ export async function deleteRecipe(id: string) {
  * and remember the staples that were bought (internal pantry, no screen yet).
  */
 export async function finishRecipe(recipe: Recipe, feedback: Omit<Feedback, 'recipe_id'>) {
+  if (DEMO) return demo.finishRecipe(recipe, feedback);
   const { error: fe } = await supabase.from('feedback').insert({ ...feedback, recipe_id: recipe.id });
   if (fe) throw fe;
   await setStatus(recipe.id, 'cooked', { cooked_at: new Date().toISOString() });
@@ -170,12 +183,14 @@ export async function finishRecipe(recipe: Recipe, feedback: Omit<Feedback, 'rec
 }
 
 export async function getFeedback(recipeId: string): Promise<Feedback | null> {
+  if (DEMO) return demo.getFeedback(recipeId);
   const { data } = await supabase.from('feedback').select('*').eq('recipe_id', recipeId).maybeSingle();
   return data as Feedback | null;
 }
 
 /** Numbers for the "Frankly remembers" card on Profile. */
 export async function getMemoryStats() {
+  if (DEMO) return demo.getMemoryStats();
   const [cooked, fb, pantry] = await Promise.all([
     supabase.from('recipes').select('title,cooked_at').eq('status', 'cooked').order('cooked_at', { ascending: false }),
     supabase.from('feedback').select('enjoyment,price_accuracy'),

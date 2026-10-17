@@ -78,6 +78,7 @@ export type RecipeData = {
   budget_check: { budget: number; total: number; with_swaps: number; status: 'ok' | 'swaps' | 'over' };
   leftovers: Leftovers;
   priced_at: string;
+  demo?: boolean; // sample prices from demo mode, not Kroger
 };
 
 export type RecipeStatus = 'draft' | 'active' | 'saved' | 'cooked' | 'dismissed';

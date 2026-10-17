@@ -8,6 +8,7 @@ import { Cooking } from '@/components/Cooking';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';
 import { generateRecipe } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { DEMO } from '@/lib/supabase';
 import { C, F } from '@/lib/theme';
 import type { Leftovers } from '@/lib/types';
 
@@ -81,6 +82,7 @@ export default function Home() {
     <Screen style={{ flexGrow: 1 }}>
       {step === 'ask' && (
         <View style={st.askWrap}>
+          {DEMO && <View style={{ alignSelf: 'center' }}><Pill tone="warn" icon="flask-outline" text="Demo mode · sample prices" /></View>}
           <Muted style={{ textAlign: 'center' }}>
             {greeting()}
             {profile?.name ? `, ${profile.name}` : ''}
