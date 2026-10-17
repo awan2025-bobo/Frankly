@@ -67,13 +67,13 @@ export default function Discover() {
 
       {error && (
         <Card>
-          <Muted style={{ color: C.tomato }}>{error}</Muted>
+          <Muted style={{ color: C.bad }}>{error}</Muted>
           <Button title="Try again" kind="secondary" onPress={() => load(cuisine, true)} />
         </Card>
       )}
       {!dishes && !error && (
         <View style={{ alignItems: 'center', gap: 8, paddingVertical: 40 }}>
-          <ActivityIndicator color={C.tomato} />
+          <ActivityIndicator color={C.primary} />
           <Muted>Flipping through your cookbook…</Muted>
         </View>
       )}
@@ -106,7 +106,7 @@ export default function Discover() {
               }}
               style={[st.option, o === cuisine && { backgroundColor: C.ink }]}>
               <Text style={[st.optionText, o === cuisine && { color: C.white }]}>{o === 'Any' ? 'Any cuisine' : o}</Text>
-              {mine.includes(o) && <Ionicons name="heart" size={14} color={o === cuisine ? C.white : C.tomato} />}
+              {mine.includes(o) && <Ionicons name="heart" size={14} color={o === cuisine ? C.white : C.primary} />}
             </Pressable>
           ))}
         </View>
@@ -117,7 +117,7 @@ export default function Discover() {
           <View style={{ gap: 12 }}>
             <Body>{open.description}</Body>
             <Card style={{ backgroundColor: C.cardAlt, flexDirection: 'row', gap: 8 }}>
-              <Ionicons name="sparkles" size={18} color={C.tomato} />
+              <Ionicons name="sparkles" size={18} color={C.primary} />
               <Body style={{ flex: 1, fontSize: 14 }}>{open.why}</Body>
             </Card>
             <View style={{ flexDirection: 'row', gap: 6 }}>

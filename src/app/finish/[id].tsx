@@ -71,7 +71,7 @@ export default function Finish() {
         </View>
       </Card>
       <Muted style={{ fontSize: 13 }}>Frankly uses this to adjust portions, prices and suggestions next time.</Muted>
-      {error && <Muted style={{ color: C.tomato }}>{error}</Muted>}
+      {error && <Muted style={{ color: C.bad }}>{error}</Muted>}
       <Button title="Save to my Cookbook" icon="book" onPress={submit} disabled={!recipe} />
       <Button title="Not yet" kind="ghost" onPress={() => router.back()} />
     </Screen>

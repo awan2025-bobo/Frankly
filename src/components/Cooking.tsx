@@ -40,7 +40,7 @@ export function Cooking({ title, lines }: { title: string; lines: string[] }) {
             <Ionicons
               name={k < i ? 'checkmark-circle' : 'ellipse-outline'}
               size={16}
-              color={k < i ? C.basil : C.faint}
+              color={k < i ? C.good : C.faint}
             />
             <Muted style={k === i ? { color: C.ink } : undefined}>{l}</Muted>
           </View>
@@ -52,6 +52,6 @@ export function Cooking({ title, lines }: { title: string; lines: string[] }) {
 
 const st = StyleSheet.create({
   wrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20, padding: 24 },
-  pot: { width: 96, height: 96, borderRadius: 48, backgroundColor: C.tomato, alignItems: 'center', justifyContent: 'center' },
+  pot: { width: 96, height: 96, borderRadius: 48, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
   line: { flexDirection: 'row', alignItems: 'center', gap: 8 },
 });

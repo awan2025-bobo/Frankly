@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Cooking } from '@/components/Cooking';
+import { Logo } from '@/components/Logo';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';
 import { generateRecipe } from '@/lib/api';
 import { useSession } from '@/lib/session';
-import { DEMO } from '@/lib/supabase';
 import { C, F } from '@/lib/theme';
 import type { Leftovers } from '@/lib/types';
 
@@ -81,26 +81,31 @@ export default function Home() {
   return (
     <Screen style={{ flexGrow: 1 }}>
       {step === 'ask' && (
-        <View style={st.askWrap}>
-          {DEMO && <View style={{ alignSelf: 'center' }}><Pill tone="warn" icon="flask-outline" text="Demo mode · sample prices" /></View>}
-          <Muted style={{ textAlign: 'center' }}>
-            {greeting()}
-            {profile?.name ? `, ${profile.name}` : ''}
-          </Muted>
-          <Text style={st.ask}>What would you like to cook today?</Text>
-          <TextInput
-            value={dish}
-            onChangeText={setDish}
-            placeholder="e.g. chicken adobo"
-            placeholderTextColor={C.faint}
-            style={st.askInput}
-            returnKeyType="go"
-            onSubmitEditing={() => dish.trim() && setStep('servings')}
-          />
-          <Button title="Let's cook" icon="arrow-forward" onPress={() => setStep('servings')} disabled={!dish.trim()} />
-          <Pressable onPress={() => router.navigate('/discover')} style={{ alignSelf: 'center', padding: 8 }}>
-            <Muted style={{ textDecorationLine: 'underline' }}>Not sure? Get ideas</Muted>
-          </Pressable>
+        <View style={{ flex: 1 }}>
+          <Logo size={40} />
+          <View style={st.askWrap}>
+            <Muted style={{ textAlign: 'center' }}>
+              {greeting()}
+              {profile?.name ? `, ${profile.name}` : ''}
+            </Muted>
+            <Text style={st.ask}>What would you like to cook today?</Text>
+            <View style={st.lineRow}>
+              <TextInput
+                value={dish}
+                onChangeText={setDish}
+                placeholderTextColor={C.faint}
+                style={st.askInput}
+                returnKeyType="go"
+                onSubmitEditing={() => dish.trim() && setStep('servings')}
+              />
+              {/* Only appears once they've typed, for keyboards without a Go key. */}
+              {dish.trim() ? (
+                <Pressable onPress={() => setStep('servings')} hitSlop={12} style={st.go} accessibilityLabel="Next">
+                  <Ionicons name="arrow-forward" size={18} color={C.white} />
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
         </View>
       )}
 
@@ -188,23 +193,23 @@ function Row({ label, value, warn }: { label: string; value: string; warn?: bool
   return (
     <View style={{ gap: 2 }}>
       <Muted style={{ fontSize: 12 }}>{label}</Muted>
-      <Body style={[{ fontFamily: F.medium }, warn && { color: C.tomato }]}>{value}</Body>
+      <Body style={[{ fontFamily: F.medium }, warn && { color: C.bad }]}>{value}</Body>
     </View>
   );
 }
 
 const st = StyleSheet.create({
-  askWrap: { flex: 1, justifyContent: 'center', gap: 18, minHeight: 480 },
+  askWrap: { flex: 1, justifyContent: 'center', gap: 18, minHeight: 460 },
+  lineRow: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 12, borderBottomWidth: 2, borderBottomColor: C.ink },
+  go: { width: 34, height: 34, borderRadius: 17, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
   ask: { fontFamily: F.display, fontSize: 34, lineHeight: 40, color: C.ink, textAlign: 'center' },
   askInput: {
     fontFamily: F.displayItalic,
     fontSize: 24,
     color: C.ink,
     textAlign: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: C.ink,
+    flex: 1,
     paddingVertical: 10,
-    marginHorizontal: 12,
   },
   back: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start' },
   quick: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, borderWidth: 1.5, borderColor: C.line, backgroundColor: C.card },

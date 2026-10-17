@@ -53,7 +53,7 @@ export function RecipeView({ data }: { data: RecipeData }) {
         </View>
         {bestStore && (
           <View style={st.reason}>
-            <Ionicons name="storefront-outline" size={18} color={C.basil} />
+            <Ionicons name="storefront-outline" size={18} color={C.good} />
             <Body style={{ flex: 1, fontSize: 14 }}>{data.recommended.reason}</Body>
           </View>
         )}
@@ -64,18 +64,18 @@ export function RecipeView({ data }: { data: RecipeData }) {
             return (
               <View key={t.locationId} style={{ gap: 4 }}>
                 <View style={st.rowBetween}>
-                  <Text style={[st.storeName, isBest && { color: C.basil }]} numberOfLines={1}>
+                  <Text style={[st.storeName, isBest && { color: C.good }]} numberOfLines={1}>
                     {isBest ? '★ ' : ''}
                     {t.name}
                     {store?.distanceMi != null ? `  ·  ${store.distanceMi.toFixed(1)} mi` : ''}
                   </Text>
-                  <Text style={[st.storeTotal, isBest && { color: C.basil }]}>
+                  <Text style={[st.storeTotal, isBest && { color: C.good }]}>
                     {t.found ? money(t.total) : 'n/a'}
                   </Text>
                 </View>
                 <View style={st.barTrack}>
                   <View
-                    style={[st.bar, { width: `${(t.total / maxTotal) * 100}%`, backgroundColor: isBest ? C.basil : C.faint }]}
+                    style={[st.bar, { width: `${(t.total / maxTotal) * 100}%`, backgroundColor: isBest ? C.good : C.faint }]}
                   />
                 </View>
                 <Muted style={{ fontSize: 12 }}>
@@ -96,7 +96,7 @@ export function RecipeView({ data }: { data: RecipeData }) {
       {data.how_personalized ? (
         <Card style={{ backgroundColor: C.cardAlt }}>
           <View style={st.rowGap}>
-            <Ionicons name="sparkles" size={18} color={C.tomato} />
+            <Ionicons name="sparkles" size={18} color={C.primary} />
             <H3>Why Frankly made it this way</H3>
           </View>
           <Body style={{ fontSize: 14 }}>{data.how_personalized}</Body>
@@ -107,7 +107,7 @@ export function RecipeView({ data }: { data: RecipeData }) {
       {swaps.length > 0 && (
         <Card>
           <View style={st.rowGap}>
-            <Ionicons name="swap-horizontal" size={18} color={C.basil} />
+            <Ionicons name="swap-horizontal" size={18} color={C.good} />
             <H3>Cheaper swaps</H3>
           </View>
           {swaps.map((i) => {
@@ -116,7 +116,7 @@ export function RecipeView({ data }: { data: RecipeData }) {
               <Pressable
                 key={i.name}
                 onPress={() => setApplied(on ? applied.filter((n) => n !== i.name) : [...applied, i.name])}
-                style={[st.swap, on && { borderColor: C.basil, backgroundColor: C.basilSoft }]}>
+                style={[st.swap, on && { borderColor: C.good, backgroundColor: C.goodSoft }]}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <Body style={{ fontFamily: F.medium }}>
                     {i.swap!.name} instead of {i.name}
@@ -125,7 +125,7 @@ export function RecipeView({ data }: { data: RecipeData }) {
                 </View>
                 <View style={{ alignItems: 'flex-end', gap: 4 }}>
                   <Text style={st.save}>save {money(i.swap!.savings)}</Text>
-                  <Ionicons name={on ? 'checkbox' : 'square-outline'} size={22} color={on ? C.basil : C.faint} />
+                  <Ionicons name={on ? 'checkbox' : 'square-outline'} size={22} color={on ? C.good : C.faint} />
                 </View>
               </Pressable>
             );
@@ -158,7 +158,7 @@ export function RecipeView({ data }: { data: RecipeData }) {
                   <>
                     <Text style={st.itemPrice}>{pick ? money(pick.cost) : 'not found'}</Text>
                     <Pressable onPress={() => setWhere(item)} style={st.pin} hitSlop={8}>
-                      <Ionicons name="location" size={18} color={C.tomato} />
+                      <Ionicons name="location" size={18} color={C.primary} />
                     </Pressable>
                   </>
                 )}
@@ -206,7 +206,7 @@ function WhereSheet({ item, data, onClose }: { item: Item | null; data: RecipeDa
     <Sheet visible onClose={onClose} title={`Where to find ${item.name}`}>
       <View style={{ gap: 10 }}>
         {options.map(({ store, pick }) => (
-          <Card key={store.locationId} style={[{ gap: 6, padding: 14 }, pick?.cost === cheapest && { borderColor: C.basil }]}>
+          <Card key={store.locationId} style={[{ gap: 6, padding: 14 }, pick?.cost === cheapest && { borderColor: C.good }]}>
             <View style={st.rowBetween}>
               <H3>{store.name}</H3>
               {pick?.cost === cheapest && <Pill tone="good" text="Cheapest" />}
@@ -245,17 +245,17 @@ const st = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   bigPrice: { fontFamily: F.display, fontSize: 40, color: C.ink, lineHeight: 46 },
-  reason: { flexDirection: 'row', gap: 8, backgroundColor: C.basilSoft, borderRadius: R.md, padding: 12 },
+  reason: { flexDirection: 'row', gap: 8, backgroundColor: C.goodSoft, borderRadius: R.md, padding: 12 },
   storeName: { fontFamily: F.medium, fontSize: 14, color: C.ink, flex: 1 },
   storeTotal: { fontFamily: F.bold, fontSize: 15, color: C.ink },
   barTrack: { height: 8, borderRadius: 4, backgroundColor: C.cardAlt, overflow: 'hidden' },
   bar: { height: 8, borderRadius: 4 },
   swap: { flexDirection: 'row', gap: 10, padding: 12, borderRadius: R.md, borderWidth: 1.5, borderColor: C.line },
-  save: { fontFamily: F.bold, color: C.basil, fontSize: 14 },
+  save: { fontFamily: F.bold, color: C.good, fontSize: 14 },
   ingredient: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
   divider: { borderTopWidth: 1, borderTopColor: C.line },
   itemPrice: { fontFamily: F.bold, fontSize: 15, color: C.ink },
-  pin: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.tomatoSoft, alignItems: 'center', justifyContent: 'center' },
+  pin: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.primarySoft, alignItems: 'center', justifyContent: 'center' },
   step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   stepNum: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   stepNumText: { fontFamily: F.bold, color: C.white, fontSize: 13 },

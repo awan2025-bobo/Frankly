@@ -77,7 +77,7 @@ export function Button({
   loading?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
-  const fg = kind === 'primary' ? C.white : kind === 'danger' ? C.tomato : C.ink;
+  const fg = kind === 'primary' ? C.white : kind === 'danger' ? C.bad : C.ink;
   return (
     <Pressable
       onPress={onPress}
@@ -152,8 +152,8 @@ export function ChipGrid({
 }
 
 export function Pill({ text, tone = 'neutral', icon }: { text: string; tone?: 'neutral' | 'good' | 'warn' | 'bad'; icon?: IconName }) {
-  const bg = { neutral: C.cardAlt, good: C.basilSoft, warn: C.mustardSoft, bad: C.tomatoSoft }[tone];
-  const fg = { neutral: C.muted, good: C.basil, warn: C.mustard, bad: C.tomato }[tone];
+  const bg = { neutral: C.cardAlt, good: C.goodSoft, warn: C.warnSoft, bad: C.badSoft }[tone];
+  const fg = { neutral: C.muted, good: C.good, warn: C.warn, bad: C.bad }[tone];
   return (
     <View style={[s.pill, { backgroundColor: bg }]}>
       {icon && <Ionicons name={icon} size={12} color={fg} />}
@@ -224,9 +224,9 @@ export function SliderRow({
         step={1}
         value={value}
         onValueChange={(v) => onChange(Math.round(v))}
-        minimumTrackTintColor={C.tomato}
+        minimumTrackTintColor={C.primary}
         maximumTrackTintColor={C.line}
-        thumbTintColor={C.tomato}
+        thumbTintColor={C.primary}
       />
       <View style={s.rowBetween}>
         <Muted style={{ fontSize: 12 }}>{left}</Muted>
@@ -293,7 +293,7 @@ export function Popup({
       <Pressable style={s.backdrop} onPress={onClose}>
         <Pressable style={s.popup} onPress={() => {}}>
           <View style={s.popupIcon}>
-            <Ionicons name={icon} size={26} color={C.tomato} />
+            <Ionicons name={icon} size={26} color={C.primary} />
           </View>
           <H2 style={{ textAlign: 'center' }}>{title}</H2>
           {message ? <Body style={{ textAlign: 'center', color: C.muted }}>{message}</Body> : null}
@@ -332,7 +332,7 @@ export function EmptyState({ icon, title, message, children }: { icon: IconName;
   return (
     <View style={s.empty}>
       <View style={s.emptyIcon}>
-        <Ionicons name={icon} size={34} color={C.tomato} />
+        <Ionicons name={icon} size={34} color={C.primary} />
       </View>
       <H2 style={{ textAlign: 'center' }}>{title}</H2>
       <Muted style={{ textAlign: 'center', maxWidth: 300 }}>{message}</Muted>
@@ -361,7 +361,7 @@ export const s = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  btnPrimary: { backgroundColor: C.tomato, ...shadow },
+  btnPrimary: { backgroundColor: C.primary, ...shadow },
   btnSecondary: { backgroundColor: C.card, borderWidth: 1.5, borderColor: C.line },
   btnGhost: { backgroundColor: 'transparent' },
   btnText: { fontFamily: F.bold, fontSize: 16 },
@@ -394,7 +394,7 @@ export const s = StyleSheet.create({
   fieldPrefix: { fontFamily: F.bold, fontSize: 18, color: C.muted, marginRight: 4 },
   fieldInput: { flex: 1, fontFamily: F.body, fontSize: 18, color: C.ink, paddingVertical: 14 },
   rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sliderValue: { fontFamily: F.bold, fontSize: 14, color: C.tomato },
+  sliderValue: { fontFamily: F.bold, fontSize: 14, color: C.primary },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 18, alignSelf: 'flex-start' },
   stepBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: C.card, borderWidth: 1.5, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
   stepValue: { fontFamily: F.display, fontSize: 34, color: C.ink, minWidth: 40, textAlign: 'center' },
@@ -402,11 +402,11 @@ export const s = StyleSheet.create({
   segmentItem: { flex: 1, paddingVertical: 10, borderRadius: R.pill, alignItems: 'center' },
   segmentOn: { backgroundColor: C.ink },
   segmentText: { fontFamily: F.medium, fontSize: 14, color: C.ink },
-  backdrop: { flex: 1, backgroundColor: 'rgba(43,33,24,0.45)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+  backdrop: { flex: 1, backgroundColor: 'rgba(24,36,26,0.45)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   popup: { backgroundColor: C.bg, borderRadius: R.lg, padding: 24, gap: 10, alignItems: 'center', width: '100%', maxWidth: 400 },
-  popupIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.tomatoSoft, alignItems: 'center', justifyContent: 'center' },
+  popupIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.primarySoft, alignItems: 'center', justifyContent: 'center' },
   sheet: { backgroundColor: C.bg, borderTopLeftRadius: R.lg, borderTopRightRadius: R.lg, padding: 20, paddingBottom: 36, width: '100%', maxWidth: 640, alignSelf: 'center' },
   sheetHandle: { width: 40, height: 5, borderRadius: 3, backgroundColor: C.line, alignSelf: 'center', marginBottom: 12 },
   empty: { alignItems: 'center', gap: 10, paddingVertical: 48 },
-  emptyIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: C.tomatoSoft, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
+  emptyIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: C.primarySoft, alignItems: 'center', justifyContent: 'center', marginBottom: 6 },
 });

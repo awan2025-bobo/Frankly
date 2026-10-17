@@ -210,7 +210,7 @@ export function LocationSection({ value, onChange }: Props) {
         <Button title="Find" onPress={() => lookup({ zip: zip.trim() }, 'zip')} disabled={zip.trim().length < 5} loading={busy === 'zip'} />
       </View>
       <Button title="Use my location" kind="secondary" icon="navigate" onPress={useGps} loading={busy === 'gps'} />
-      {message && <Muted style={{ color: C.tomato }}>{message}</Muted>}
+      {message && <Muted style={{ color: C.bad }}>{message}</Muted>}
       {value.kroger_stores.length > 0 && (
         <View style={{ gap: 8 }}>
           <Label>Frankly will compare prices at:</Label>

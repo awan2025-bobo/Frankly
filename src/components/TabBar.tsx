@@ -31,7 +31,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         if (center) {
           return (
             <Pressable key={route.key} onPress={onPress} style={st.item} accessibilityLabel="Home">
-              <View style={[st.center, focused && { backgroundColor: C.tomato }]}>
+              <View style={[st.center, focused && { backgroundColor: C.primary }]}>
                 <Ionicons name={tab.iconOn} size={28} color={C.white} />
               </View>
             </Pressable>
@@ -39,8 +39,8 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         }
         return (
           <Pressable key={route.key} onPress={onPress} style={st.item} accessibilityLabel={tab.label}>
-            <Ionicons name={focused ? tab.iconOn : tab.icon} size={23} color={focused ? C.tomato : C.muted} />
-            <Text style={[st.label, focused && { color: C.tomato }]}>{tab.label}</Text>
+            <Ionicons name={focused ? tab.iconOn : tab.icon} size={23} color={focused ? C.primary : C.muted} />
+            <Text style={[st.label, focused && { color: C.primary }]}>{tab.label}</Text>
           </Pressable>
         );
       })}

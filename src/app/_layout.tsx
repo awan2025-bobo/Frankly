@@ -18,7 +18,7 @@ function Gate() {
   if (!ready) {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator color={C.tomato} />
+        <ActivityIndicator color={C.primary} />
       </View>
     );
   }

@@ -38,7 +38,7 @@ export default function Profile() {
 
       <Card style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Ionicons name="sparkles" size={18} color={C.tomato} />
+          <Ionicons name="sparkles" size={18} color={C.primary} />
           <H3>What Frankly remembers</H3>
         </View>
         <View style={st.stats}>
@@ -108,7 +108,7 @@ function Row({ icon, title, subtitle, onPress }: { icon: IconName; title: string
   return (
     <Pressable onPress={onPress}>
       <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
-        <Ionicons name={icon} size={22} color={C.tomato} />
+        <Ionicons name={icon} size={22} color={C.primary} />
         <View style={{ flex: 1 }}>
           <H3>{title}</H3>
           <Muted numberOfLines={1} style={{ fontSize: 13 }}>
@@ -122,7 +122,7 @@ function Row({ icon, title, subtitle, onPress }: { icon: IconName; title: string
 }
 
 const st = StyleSheet.create({
-  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: C.tomato, alignItems: 'center', justifyContent: 'center' },
+  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center' },
   avatarText: { fontFamily: F.display, fontSize: 26, color: C.white },
   stats: { flexDirection: 'row' },
   statValue: { fontFamily: F.display, fontSize: 28, color: C.ink },

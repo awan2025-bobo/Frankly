@@ -71,7 +71,7 @@ export default function Onboarding() {
     <Screen>
       <View style={st.progress}>
         {STEPS.map((_, i) => (
-          <View key={i} style={[st.dot, i <= step && { backgroundColor: C.tomato }]} />
+          <View key={i} style={[st.dot, i <= step && { backgroundColor: C.primary }]} />
         ))}
       </View>
       <View style={{ gap: 6, marginTop: 8 }}>
@@ -79,7 +79,7 @@ export default function Onboarding() {
         <Muted>{subtitle}</Muted>
       </View>
       <Section value={prefs} onChange={setPrefs} />
-      {error && <Muted style={{ color: C.tomato }}>{error}</Muted>}
+      {error && <Muted style={{ color: C.bad }}>{error}</Muted>}
       <View style={{ gap: 8, marginTop: 8 }}>
         <Button
           title={last ? 'Build my Frankly' : 'Continue'}
@@ -97,5 +97,5 @@ export default function Onboarding() {
 
 const st = StyleSheet.create({
   progress: { flexDirection: 'row', gap: 6 },
-  dot: { flex: 1, height: 5, borderRadius: 3, backgroundColor: '#E7DCCB' },
+  dot: { flex: 1, height: 5, borderRadius: 3, backgroundColor: C.line },
 });

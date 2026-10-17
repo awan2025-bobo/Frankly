@@ -22,7 +22,7 @@ export default function Active() {
   if (recipe === undefined) {
     return (
       <Screen>
-        <ActivityIndicator color={C.tomato} style={{ marginTop: 80 }} />
+        <ActivityIndicator color={C.primary} style={{ marginTop: 80 }} />
       </Screen>
     );
   }

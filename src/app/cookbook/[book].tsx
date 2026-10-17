@@ -34,7 +34,7 @@ export default function Book() {
         <Muted>Cookbook</Muted>
       </Pressable>
       <H1>{cooked ? 'Cooked Recipes' : 'Saved Recipes'}</H1>
-      {recipes === null && <ActivityIndicator color={C.tomato} />}
+      {recipes === null && <ActivityIndicator color={C.primary} />}
       {recipes?.length === 0 && (
         <EmptyState
           icon={cooked ? 'checkmark-done' : 'bookmark-outline'}

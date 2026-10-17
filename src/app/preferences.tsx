@@ -70,7 +70,7 @@ export default function Preferences() {
           <Section value={prefs} onChange={setPrefs} />
         </View>
       ))}
-      {error && <Muted style={{ color: C.tomato }}>{error}</Muted>}
+      {error && <Muted style={{ color: C.bad }}>{error}</Muted>}
       <Button title="Save preferences" icon="checkmark" onPress={save} loading={saving} style={{ marginTop: 12 }} />
     </Screen>
   );

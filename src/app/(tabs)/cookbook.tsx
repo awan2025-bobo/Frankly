@@ -22,8 +22,8 @@ export default function Cookbook() {
       <H1>Cookbook</H1>
       <Muted>Everything you've saved and cooked, remembered.</Muted>
       <View style={st.shelf}>
-        <Book title="Saved Recipes" count={counts.saved} color={C.tomato} icon="bookmark" onPress={() => router.push('/cookbook/saved')} />
-        <Book title="Cooked Recipes" count={counts.cooked} color={C.basil} icon="checkmark-done" onPress={() => router.push('/cookbook/cooked')} />
+        <Book title="Saved Recipes" count={counts.saved} color={C.primary} icon="bookmark" onPress={() => router.push('/cookbook/saved')} />
+        <Book title="Cooked Recipes" count={counts.cooked} color={C.good} icon="checkmark-done" onPress={() => router.push('/cookbook/cooked')} />
       </View>
     </Screen>
   );

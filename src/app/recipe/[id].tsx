@@ -68,7 +68,7 @@ export default function RecipeScreen() {
   if (!recipe) {
     return (
       <Screen>
-        {error ? <Muted>{error}</Muted> : <ActivityIndicator color={C.tomato} style={{ marginTop: 80 }} />}
+        {error ? <Muted>{error}</Muted> : <ActivityIndicator color={C.primary} style={{ marginTop: 80 }} />}
       </Screen>
     );
   }
@@ -88,7 +88,7 @@ export default function RecipeScreen() {
       </Pressable>
 
       {recipe.status === 'cooked' && recipe.cooked_at && (
-        <Card style={{ backgroundColor: C.basilSoft, borderColor: C.basilSoft }}>
+        <Card style={{ backgroundColor: C.goodSoft, borderColor: C.goodSoft }}>
           <H3>Cooked on {new Date(recipe.cooked_at).toLocaleDateString([], { month: 'long', day: 'numeric' })}</H3>
           {feedback && (
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
@@ -103,7 +103,7 @@ export default function RecipeScreen() {
 
       <RecipeView data={recipe.data} />
 
-      {error && <Muted style={{ color: C.tomato }}>{error}</Muted>}
+      {error && <Muted style={{ color: C.bad }}>{error}</Muted>}
 
       <View style={{ gap: 10, marginTop: 8 }}>
         {recipe.status === 'draft' && (
