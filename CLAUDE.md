@@ -16,25 +16,24 @@ Two people (Rick and his partner, GitHub `awan2025-bobo`) build this together, e
 
 ## The app
 
-An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, optional questions skippable) captures household, taste sliders, cuisines, diet, allergens, appliances and usual stores. Five tabs: Active Recipe, Cookbook (Saved + Cooked "books"), Home ("What would you like to cook today?"), "Don't know what to make?", Profile. The agent builds a recipe within budget, prices it against a **sample dataset of demo stores**, suggests cheaper swaps, subtracts the pantry, remembers staples, and stores feedback + cooked dates to improve future suggestions. Full spec: `docs/MVP.md`.
+An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, optional questions skippable) captures household, taste sliders, cuisines, diet, allergens, appliances and usual stores. Five tabs: Active Recipe, Cookbook (Saved + Cooked "books"), Home ("What would you like to cook today?"), "Don't know what to make?", Profile. The agent builds a recipe within budget, prices it with **live Kroger prices** at nearby Kroger-family stores (QFC, Fred Meyer), suggests cheaper swaps, remembers staples (pantry is internal only, no pantry screen), and stores feedback + cooked dates to improve future suggestions. Full spec: `docs/MVP.md`.
 
-**Status:** MVP doc received. Waiting on the team's answers in `docs/DECISIONS.md`, then the plan is a one-shot first demo.
+**Status:** decisions answered (`docs/DECISIONS.md`). First demo being built by Rick's Claude. Deferred ideas are under "Later" in DECISIONS.md: don't build them unless the team asks.
 
 ## Stack
 
 - **Expo (React Native)**, demoed on phones with **Expo Go** (`npx expo start`, scan the QR code).
 - **Supabase**: database, auth if needed, and **Edge Functions** for anything that uses a secret key. Second free project in Rick's account; partner is invited to the org.
 - **Claude API** (Claude Console) is the only AI provider. Claude handles recipe parsing, preference adjustments, scaling servings and matching ingredients to products.
-- **Prices come from a local sample price dataset** of 2–3 clearly labeled demo stores (MVP: no live pricing or retailer APIs).
-- **Stretch goal only — Kroger Developer API** for real store locations and prices (Kroger owns QFC and Fred Meyer, so it covers Seattle):
+- **Kroger Developer API** (team overrode the MVP's "no live pricing") for real store locations and prices. Kroger-family stores only; other stores are saved but not priced (Kroger owns QFC and Fred Meyer, so it covers Seattle):
   - Locations API: zip code → nearby stores with addresses and coordinates.
   - Products API: search items with prices, using `filter.locationId`.
   - Auth: client-credentials OAuth token, scope `product.compact`.
-- **No Google Maps.** The user types a zip code; distance is computed from store coordinates in code.
+- **No Google Maps.** The user types a zip code or allows phone location; distance is computed from store coordinates in code.
 
 ## Rules
 
-- **Never let the AI invent stores, distances or prices.** Those come from the sample dataset (or Kroger, if the stretch goal happens). Price math happens in code, not in Claude.
+- **Never let the AI invent stores, distances or prices.** Those come from the Kroger API only. Price math happens in code, not in Claude.
 - **Secrets never ship in the app.** The Claude API key and Kroger client secret live only in Supabase Edge Function secrets. The app may hold only the Supabase URL and anon key.
 - **Never commit keys.** `.env` is gitignored. Keep variable names (no values) in `.env.example`. Share real keys privately between the two of you, never in the repo, Discord channels or screenshots.
 - **Split work by area, not by file**, so two Claudes don't edit the same file. Default split: Rick owns screens/UI, partner owns Supabase, Kroger and the data side. Record who owns what in `HANDOFF.md`.
@@ -45,7 +44,7 @@ An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, 
 
 ## Teaching note: Kroger API
 
-(Applies only if the Kroger stretch goal happens.) Rick asked to be **taught** the Kroger API while building it, not just have it done for him. He has not created the developer account yet. When Kroger work starts, explain each step as you do it:
+Step-by-step guide: `docs/KROGER.md`. Rick asked to be **taught** the Kroger API while building it, not just have it done for him. He has not created the developer account yet. When Kroger work starts, explain each step as you do it:
 
 1. Register at developer.kroger.com and create an app (client ID + secret, scope `product.compact`).
 2. Get an access token with the client-credentials flow.
