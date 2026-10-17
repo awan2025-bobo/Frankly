@@ -1,6 +1,6 @@
 # Frankly — DubHacks 2026
 
-Read this first, then read `HANDOFF.md` for current status.
+Read this first, then `HANDOFF.md` for current status and the change log, then `docs/IDEA.md` for the product idea.
 
 Two people (Rick and his partner, GitHub `awan2025-bobo`) build this together, each with their own Claude account. **Claude memory is not shared between accounts**, so this file and `HANDOFF.md` are the only shared context. Keep them current.
 
@@ -9,11 +9,14 @@ Two people (Rick and his partner, GitHub `awan2025-bobo`) build this together, e
 - DubHacks 2026, University of Washington, **Sat Oct 17 – Sun Oct 18, 2026**.
 - Theme: **"Let's Get Cookin'!"**
 - **Submissions due Sun Oct 18, 10:30 AM** on Devpost. Make the repo public before submitting.
-- All app code must be written during the event (past years' rule). Confirm tracks at the opening ceremony. Likely fits: **Visa (Reimagine Shopping)** and **Cook Smarter**.
+- All app code must be written during the event (past years' rule).
+- **Track chosen: Cook Smarter** (AI agents, planning, data management). Rubric: Functionality 30%, Track applicability 30%, Design 20%, Creativity 20%. Full rubric in `docs/IDEA.md`.
 
 ## The app
 
-A budget chef assistant for college students and budget eaters. The user enters a recipe plus preferences (spice, salt, serving size, zip code, ingredients already on hand). The app adjusts the recipe and finds the cheapest, closest place to buy the missing ingredients.
+A budget chef assistant for college students and budget eaters. Onboarding captures appliances, how often they cook, cuisines and spice level. Per meal, the user enters a recipe, servings, budget, leftover tolerance and zip code. The agent picks where to buy each ingredient (cost vs. distance) and how much, remembers long-lasting pantry items so it doesn't re-buy them, and logs cook history to suggest dishes not made in a while.
+
+**This is still a rough idea (`docs/IDEA.md`).** An MVP document is coming; once it lands it becomes the source of truth. **Don't start building the app until the team sends it.** They plan to ask for a one-shot first demo from it.
 
 ## Stack
 
@@ -34,6 +37,7 @@ A budget chef assistant for college students and budget eaters. The user enters 
 - **Split work by area, not by file**, so two Claudes don't edit the same file. Default split: Rick owns screens/UI, partner owns Supabase, Kroger and the data side. Record who owns what in `HANDOFF.md`.
 - **Pull before starting. Commit and push every 30–60 minutes** with small commits.
 - `main` should always run on the phone. Use a branch for anything risky and merge back often.
+- **Every commit gets a change-log entry.** Add a line at the top of "Change log" in `HANDOFF.md` (date/time, who, what changed, anything the other Claude must know) in the same commit. That log is how the two Claudes tell each other what's happening.
 - **Before you stop** (tokens running out, break, handing off): update `HANDOFF.md`, commit and push.
 
 ## Teaching note: Kroger API
