@@ -235,9 +235,10 @@ export default function Home() {
             <Row label="Dish" value={`${dish}, ${servings} servings, $${budgetNum.toFixed(2)}`} />
             <Row label="Leftovers" value={leftovers} />
             <Row label="Spice · Seasoning · Difficulty" value={`${profile.spice} · ${profile.seasoning} · ${profile.difficulty} (out of 10)`} />
-            {profile.diets.length > 0 && <Row label="Diet" value={profile.diets.join(', ')} />}
-            {profile.allergens.length > 0 && <Row label="Allergens" value={profile.allergens.join(', ')} warn />}
-            <Row label="Appliances" value={profile.appliances.join(', ') || 'Not set'} />
+            <Row label="Diet" value={profile.diets.join(', ') || 'None'} />
+            {/* Always shown, so it's obvious before cooking which allergies Frankly will avoid */}
+            <Row label="Allergens" value={profile.allergens.join(', ') || 'None set'} warn={profile.allergens.length > 0} />
+            <Row label="Appliances" value={profile.appliances.join(', ') || 'None (no-cook recipes only)'} />
             <Row
               label="Stores"
               value={profile.kroger_stores.length ? profile.kroger_stores.map((s) => s.name).join(', ') : 'Not set: add your zip in Profile'}
