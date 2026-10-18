@@ -11,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
   type StyleProp,
   type TextStyle,
   type ViewStyle,
@@ -290,8 +291,9 @@ export function Popup({
 }) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <Pressable style={s.backdrop} onPress={onClose}>
-        <Pressable style={s.popup} onPress={() => {}}>
+      <View style={s.backdrop}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+        <View style={s.popup}>
           <View style={s.popupIcon}>
             <Ionicons name={icon} size={26} color={C.primary} />
           </View>
@@ -303,17 +305,20 @@ export function Popup({
               <Button key={a.label} title={a.label} kind={a.kind ?? 'primary'} onPress={a.onPress} />
             ))}
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
 
 export function Sheet({ visible, onClose, children, title }: { visible: boolean; onClose: () => void; children: ReactNode; title: string }) {
+  const { height } = useWindowDimensions();
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={[s.backdrop, { justifyContent: 'flex-end', padding: 0 }]} onPress={onClose}>
-        <Pressable style={s.sheet} onPress={() => {}}>
+      {/* The tap-to-close backdrop sits BEHIND the sheet (not around it), so scrolling inside works on phones. */}
+      <View style={[s.backdrop, { justifyContent: 'flex-end', padding: 0 }]}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+        <View style={s.sheet}>
           <View style={s.sheetHandle} />
           <View style={[s.rowBetween, { marginBottom: 12 }]}>
             <H2 style={{ flex: 1 }}>{title}</H2>
@@ -321,9 +326,11 @@ export function Sheet({ visible, onClose, children, title }: { visible: boolean;
               <Ionicons name="close" size={24} color={C.muted} />
             </Pressable>
           </View>
-          <ScrollView style={{ maxHeight: 520 }}>{children}</ScrollView>
-        </Pressable>
-      </Pressable>
+          <ScrollView style={{ maxHeight: height * 0.68 }} contentContainerStyle={{ paddingBottom: 12 }} showsVerticalScrollIndicator>
+            {children}
+          </ScrollView>
+        </View>
+      </View>
     </Modal>
   );
 }

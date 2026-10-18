@@ -2,6 +2,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { C, F, R } from '@/lib/theme';
 
@@ -11,7 +12,6 @@ const ICONS: Record<string, McIcon> = {
   Stovetop: 'stove',
   Oven: 'toaster-oven',
   Microwave: 'microwave',
-  'Air fryer': 'fan',
   'Slow cooker': 'pot',
   'Instant Pot': 'pot-steam',
   'Rice cooker': 'rice',
@@ -42,7 +42,11 @@ export function ApplianceGrid({
             accessibilityRole="checkbox"
             accessibilityState={{ checked: on }}
             style={({ pressed }) => [st.tile, on && st.tileOn, pressed && { transform: [{ scale: 0.95 }, { rotate: on ? '1.5deg' : '-1.5deg' }] }]}>
-            <MaterialCommunityIcons name={ICONS[o] ?? 'chef-hat'} size={34} color={on ? C.onPrimary : C.primary} />
+            {o === 'Air fryer' ? (
+              <AirFryerIcon size={34} color={on ? C.onPrimary : C.primary} />
+            ) : (
+              <MaterialCommunityIcons name={ICONS[o] ?? 'chef-hat'} size={34} color={on ? C.onPrimary : C.primary} />
+            )}
             <Text style={[st.label, on && { color: C.onPrimary }]} numberOfLines={2}>
               {o}
             </Text>
@@ -55,6 +59,18 @@ export function ApplianceGrid({
         );
       })}
     </View>
+  );
+}
+
+/** The icon set has no air fryer, so here's one in the same style: body, dial, basket drawer with handle. */
+function AirFryerIcon({ size, color }: { size: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Path d="M6 3h12a3 3 0 0 1 3 3v13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a3 3 0 0 1 3-3z" fill="none" stroke={color} strokeWidth={1.9} />
+      <Circle cx={12} cy={7.2} r={1.9} fill={color} />
+      <Rect x={5.6} y={11.2} width={12.8} height={7.4} rx={1.6} fill="none" stroke={color} strokeWidth={1.7} />
+      <Path d="M9.5 14.9h5" stroke={color} strokeWidth={2.2} strokeLinecap="round" />
+    </Svg>
   );
 }
 

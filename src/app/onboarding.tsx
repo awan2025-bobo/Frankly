@@ -56,7 +56,7 @@ export default function Onboarding() {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', gap: 18 }}>
         <SizzlingPan size={200} />
-        <H1 style={{ textAlign: 'center' }}>Building your Frankly…</H1>
+        <H1 style={{ textAlign: 'center', paddingHorizontal: 28 }}>{'Building your\nFrankly…'}</H1>
       </View>
     );
   }

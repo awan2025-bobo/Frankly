@@ -57,8 +57,9 @@ export function ChoppingLoader({ text }: { text?: string }) {
             },
           ]}>
           <Svg width={120} height={30} viewBox="0 0 120 30">
-            <Path d="M4 18 C 20 4, 60 4, 82 8 L82 22 L10 22 C 6 22, 3 20, 4 18 Z" fill="#D9D6CC" />
-            <Path d="M10 20 L82 20" stroke="#B8B4A8" strokeWidth={2} />
+            {/* chef's knife: straight spine on top, curved cutting edge underneath, tip pointing at the carrot */}
+            <Path d="M82 8 L14 8 C 8 8, 4 10, 3 13 C 18 25, 58 26, 82 22 Z" fill="#D9D6CC" />
+            <Path d="M14 10 L82 10" stroke="#B8B4A8" strokeWidth={2} />
             <Rect x={80} y={7} width={38} height={16} rx={6} fill="#4A4538" />
             <Circle cx={92} cy={15} r={2} fill="#B8B4A8" />
             <Circle cx={106} cy={15} r={2} fill="#B8B4A8" />
