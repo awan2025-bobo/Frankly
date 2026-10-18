@@ -402,6 +402,17 @@ export async function startRecipe(recipe: Recipe): Promise<string> {
   return recipe.id;
 }
 
+export async function setItemHave(recipe: Recipe, itemName: string, have: boolean): Promise<Recipe> {
+  const d = await load();
+  const items = recipe.data.items.map((i) => (i.name === itemName ? { ...i, already_have: have } : i));
+  const updated = { ...recipe, data: { ...recipe.data, items } };
+  d.recipes = d.recipes.map((r) => (r.id === recipe.id ? updated : r));
+  const n = itemName.toLowerCase();
+  if (have && items.find((i) => i.name === itemName)?.is_staple && !d.pantry.includes(n)) d.pantry.push(n);
+  await save();
+  return updated;
+}
+
 export const saveForLater = (id: string) => setStatus(id, 'saved');
 export const dismissRecipe = (id: string) => setStatus(id, 'dismissed');
 

@@ -165,6 +165,26 @@ export async function startRecipe(recipe: Recipe): Promise<string> {
   return recipe.id;
 }
 
+/**
+ * "I already have this" on one ingredient: saved on the recipe, and long-lasting staples are also
+ * remembered in the (internal) pantry so future recipes skip them.
+ */
+export async function setItemHave(recipe: Recipe, itemName: string, have: boolean): Promise<Recipe> {
+  if (DEMO) return demo.setItemHave(recipe, itemName, have);
+  const items = recipe.data.items.map((i) => (i.name === itemName ? { ...i, already_have: have } : i));
+  const data = { ...recipe.data, items };
+  const { error } = await supabase.from('recipes').update({ data }).eq('id', recipe.id);
+  if (error) throw error;
+  const item = items.find((i) => i.name === itemName);
+  if (have && item?.is_staple) {
+    await supabase.from('pantry_items').upsert(
+      { name: item.name.toLowerCase(), is_staple: true, recipe_id: recipe.id },
+      { onConflict: 'user_id,name', ignoreDuplicates: true },
+    );
+  }
+  return { ...recipe, data };
+}
+
 export const saveForLater = (id: string) => (DEMO ? demo.saveForLater(id) : setStatus(id, 'saved'));
 export const dismissRecipe = (id: string) => (DEMO ? demo.dismissRecipe(id) : setStatus(id, 'dismissed'));
 

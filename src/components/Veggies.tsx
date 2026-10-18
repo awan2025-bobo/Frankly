@@ -2,7 +2,8 @@
 //   idle    -> vegetables bob and drift around the edges
 //   docked  -> a pot glides up from the bottom and the vegetables fly into it
 //   away    -> the pot drops out of the overlay (the preview slide shows <InlinePot/> at the end of its content)
-//   cooking -> the pot moves to the center and sizzles: jitter, bubbles, steam, popping droplets
+//   cooking -> the pot moves to the center and cycles: sizzle (jitter, bubbles, steam) -> lid opens and
+//              ingredients drop in -> smoke, with a progress bar under "Cooking it up…"
 //   done    -> a quick "pop" with a little burst, then onDone() so Home can show the recipe
 // Purely decorative: it never blocks touches.
 import { useEffect, useRef, useState, type ReactElement } from 'react';
@@ -345,6 +346,129 @@ export function InlinePot() {
   );
 }
 
+/** The pot's lid, used in the "lid opens, ingredients go in" phase. */
+const LidArt = () => (
+  <Svg viewBox="0 0 120 30">
+    <Path d="M10 26 C 14 10, 106 10, 110 26 Z" fill="#9F987F" />
+    <Path d="M8 24 C 12 8, 104 8, 108 24 Z" fill="#DDD8C5" />
+    <Rect x={50} y={2} width={20} height={9} rx={4.5} fill="#4A4538" />
+  </Svg>
+);
+
+/** Phase 2: the lid lands, swings open, a few ingredients drop in, and it closes again. */
+function LidAndDrops({ run }: { run: number }) {
+  const lid = useRef(new Animated.Value(0)).current; // 0 hidden above, 1 on the pot
+  const tilt = useRef(new Animated.Value(0)).current; // 0 closed, 1 open
+  const drops = [useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current, useRef(new Animated.Value(0)).current];
+  useEffect(() => {
+    if (!run) return;
+    lid.setValue(0);
+    tilt.setValue(0);
+    drops.forEach((d) => d.setValue(0));
+    Animated.sequence([
+      Animated.timing(lid, { toValue: 1, duration: 280, easing: Easing.out(Easing.back(1.5)), useNativeDriver: native }),
+      Animated.timing(tilt, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: native }),
+      Animated.stagger(
+        170,
+        drops.map((d) => Animated.timing(d, { toValue: 1, duration: 520, easing: Easing.in(Easing.quad), useNativeDriver: native })),
+      ),
+      Animated.timing(tilt, { toValue: 0, duration: 260, easing: Easing.in(Easing.cubic), useNativeDriver: native }),
+      Animated.delay(250),
+      Animated.timing(lid, { toValue: 0, duration: 260, useNativeDriver: native }),
+    ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [run]);
+  const DropArt = [Tomato, Carrot, Mushroom];
+  return (
+    <>
+      {drops.map((d, i) => {
+        const V = DropArt[i];
+        return (
+          <Animated.View
+            key={i}
+            style={{
+              position: 'absolute',
+              left: POT * (0.3 + i * 0.14),
+              top: POT * 0.08,
+              width: 30,
+              height: 30,
+              opacity: d.interpolate({ inputRange: [0, 0.05, 0.85, 1], outputRange: [0, 1, 1, 0] }),
+              transform: [
+                { translateY: d.interpolate({ inputRange: [0, 1], outputRange: [-110, 4] }) },
+                { rotate: d.interpolate({ inputRange: [0, 1], outputRange: ['0deg', `${120 + i * 60}deg`] }) },
+                { scale: d.interpolate({ inputRange: [0, 1], outputRange: [1, 0.6] }) },
+              ],
+            }}>
+            <V />
+          </Animated.View>
+        );
+      })}
+      <Animated.View
+        style={{
+          position: 'absolute',
+          left: POT * 0.07,
+          top: POT * 0.04,
+          width: POT * 0.86,
+          height: POT * 0.22,
+          opacity: lid.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
+          transformOrigin: 'left bottom',
+          transform: [
+            { translateY: lid.interpolate({ inputRange: [0, 1], outputRange: [-40, 0] }) },
+            { translateY: tilt.interpolate({ inputRange: [0, 1], outputRange: [0, -10] }) },
+            { rotate: tilt.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-38deg'] }) },
+          ],
+        }}>
+        <LidArt />
+      </Animated.View>
+    </>
+  );
+}
+
+/** Phase 3: soft smoke puffs billowing out of the pot. */
+function Puff({ x, delay, run }: { x: number; delay: number; run: boolean }) {
+  const t = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    if (!run) {
+      t.setValue(0);
+      return;
+    }
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(t, { toValue: 1, duration: 1500, easing: Easing.out(Easing.quad), useNativeDriver: native }),
+        Animated.timing(t, { toValue: 0, duration: 0, useNativeDriver: native }),
+      ]),
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [run, delay, t]);
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        left: x - 16,
+        top: POT * 0.05,
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: 'rgba(150,146,130,0.45)',
+        opacity: t.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 0.8, 0] }),
+        transform: [
+          { translateY: t.interpolate({ inputRange: [0, 1], outputRange: [0, -70] }) },
+          { translateX: t.interpolate({ inputRange: [0, 1], outputRange: [0, (delay % 2 ? 1 : -1) * 18] }) },
+          { scale: t.interpolate({ inputRange: [0, 1], outputRange: [0.6, 2.2] }) },
+        ],
+      }}
+    />
+  );
+}
+
+// The recipe loader cycles through these every few seconds until the recipe is ready.
+const PHASES = ['sizzle', 'lid', 'smoke'] as const;
+const PHASE_MS = 3000;
+// Typical time to a real recipe (Claude + live Kroger prices). The bar eases toward 92% over this, then finishes on done.
+const EXPECTED_MS = 15000;
+
 export function VeggieStage({
   mode,
   caption,
@@ -360,7 +484,10 @@ export function VeggieStage({
   const potOpacity = useRef(new Animated.Value(1)).current;
   const jitter = useRef(new Animated.Value(0)).current;
   const captionOpacity = useRef(new Animated.Value(0)).current;
+  const progress = useRef(new Animated.Value(0)).current;
   const [burst, setBurst] = useState(0);
+  const [phase, setPhase] = useState(0);
+  const [lidRun, setLidRun] = useState(0);
   const doneRef = useRef(onDone);
   doneRef.current = onDone;
 
@@ -369,20 +496,48 @@ export function VeggieStage({
   const hiddenTop = h + 20;
   const dockTop = h - POT * 0.86 - 10;
   const centerTop = h * 0.3 - POT / 2;
+  const cooking = mode === 'cooking';
+  const sizzling = cooking && PHASES[phase] !== 'lid';
 
   // Pot position + scale per mode.
   useEffect(() => {
     const to = mode === 'idle' || mode === 'away' ? 0 : mode === 'docked' ? 1 : 2;
     Animated.spring(potY, { toValue: to, useNativeDriver: native, speed: mode === 'away' ? 14 : 9, bounciness: mode === 'idle' || mode === 'away' ? 0 : 7 }).start();
     Animated.spring(potScale, { toValue: mode === 'cooking' || mode === 'done' ? 1.35 : 1, useNativeDriver: native, speed: 10, bounciness: 6 }).start();
-    Animated.timing(captionOpacity, { toValue: mode === 'cooking' ? 1 : 0, duration: 300, useNativeDriver: native }).start();
+    Animated.timing(captionOpacity, { toValue: mode === 'cooking' || mode === 'done' ? 1 : 0, duration: 300, useNativeDriver: native }).start();
     // Fade out as it drops away, so it never lingers behind the preview slide's inline pot.
     Animated.timing(potOpacity, { toValue: mode === 'away' ? 0 : 1, duration: mode === 'away' ? 260 : 120, useNativeDriver: native }).start();
   }, [mode, potY, potScale, captionOpacity, potOpacity]);
 
-  // Sizzle: tiny fast jitter while cooking.
+  // Cycle sizzle -> lid opens + ingredients in -> smoke, every few seconds while cooking.
   useEffect(() => {
-    if (mode !== 'cooking') {
+    if (!cooking) {
+      setPhase(0);
+      return;
+    }
+    const t = setInterval(() => setPhase((p) => (p + 1) % PHASES.length), PHASE_MS);
+    return () => clearInterval(t);
+  }, [cooking]);
+  useEffect(() => {
+    if (cooking && PHASES[phase] === 'lid') setLidRun((n) => n + 1);
+  }, [phase, cooking]);
+
+  // Progress bar: eases toward 92% while cooking, snaps to 100% when done.
+  useEffect(() => {
+    if (mode === 'cooking') {
+      progress.setValue(0);
+      Animated.timing(progress, { toValue: 0.92, duration: EXPECTED_MS, easing: Easing.out(Easing.quad), useNativeDriver: false }).start();
+    } else if (mode === 'done') {
+      Animated.timing(progress, { toValue: 1, duration: 250, useNativeDriver: false }).start();
+    } else {
+      progress.stopAnimation();
+      progress.setValue(0);
+    }
+  }, [mode, progress]);
+
+  // Sizzle: tiny fast jitter (sizzle and smoke phases).
+  useEffect(() => {
+    if (!sizzling) {
       jitter.stopAnimation();
       jitter.setValue(0);
       return;
@@ -393,7 +548,7 @@ export function VeggieStage({
     );
     loop.start();
     return () => loop.stop();
-  }, [mode, jitter]);
+  }, [sizzling, jitter]);
 
   // Finish: pop + burst, then hand back to Home.
   useEffect(() => {
@@ -409,7 +564,8 @@ export function VeggieStage({
 
   const translateY = potY.interpolate({ inputRange: [0, 1, 2], outputRange: [hiddenTop, dockTop, centerTop] });
   const target = { x: w / 2, y: dockTop + POT * 0.22 };
-  const cooking = mode === 'cooking';
+  const showBubbles = cooking && PHASES[phase] === 'sizzle';
+  const showSmoke = cooking && PHASES[phase] === 'smoke';
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none" onLayout={(e) => setSize({ w: e.nativeEvent.layout.width, h: e.nativeEvent.layout.height })}>
@@ -433,12 +589,16 @@ export function VeggieStage({
           ],
         }}>
         {[0.32, 0.45, 0.58, 0.7].map((fx, i) => (
-          <Steam key={`s${i}`} x={POT * fx} delay={i * 420} run={cooking} />
+          <Steam key={`s${i}`} x={POT * fx} delay={i * 420} run={showBubbles} />
         ))}
         {[0.3, 0.42, 0.55, 0.66, 0.38, 0.6].map((fx, i) => (
-          <Bubble key={`b${i}`} x={POT * fx} delay={i * 210} size={8 + (i % 3) * 4} run={cooking} />
+          <Bubble key={`b${i}`} x={POT * fx} delay={i * 210} size={8 + (i % 3) * 4} run={showBubbles} />
+        ))}
+        {[0.3, 0.42, 0.52, 0.62, 0.72].map((fx, i) => (
+          <Puff key={`p${i}`} x={POT * fx} delay={i * 260} run={showSmoke} />
         ))}
         <Pot />
+        <LidAndDrops run={lidRun} />
         <Burst fire={burst} />
       </Animated.View>
 
@@ -446,6 +606,9 @@ export function VeggieStage({
         <Animated.View style={[st.captionWrap, { top: h * 0.3 + POT * 0.8, opacity: captionOpacity }]}>
           <Text style={st.captionTitle}>Cooking it up…</Text>
           <Text style={st.caption}>{caption}</Text>
+          <View style={st.track}>
+            <Animated.View style={[st.fill, { width: progress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]} />
+          </View>
         </Animated.View>
       ) : null}
     </View>
@@ -456,5 +619,6 @@ const st = StyleSheet.create({
   captionWrap: { position: 'absolute', left: 24, right: 24, alignItems: 'center', gap: 8 },
   captionTitle: { fontFamily: F.display, fontSize: 30, color: C.ink, textAlign: 'center' },
   caption: { fontFamily: F.medium, fontSize: 15, color: C.muted, textAlign: 'center' },
+  track: { width: 240, height: 10, borderRadius: 5, backgroundColor: C.cardAlt, overflow: 'hidden', marginTop: 10 },
+  fill: { height: 10, borderRadius: 5, backgroundColor: C.primary },
 });
-

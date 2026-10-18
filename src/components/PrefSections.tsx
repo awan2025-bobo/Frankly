@@ -8,6 +8,7 @@ import { findStores } from '@/lib/api';
 import { ALLERGENS, APPLIANCES, CUISINES, DIETS, KROGER_FAMILY, STORES } from '@/lib/options';
 import { C } from '@/lib/theme';
 import type { Profile } from '@/lib/types';
+import { ApplianceGrid } from './ApplianceGrid';
 import { Body, Button, Card, ChipGrid, Field, Label, Muted, Pill, Segmented, SliderRow, Stepper } from './ui';
 
 export type Prefs = Omit<Profile, 'id'> & { allergenOther: string; storeOther: string };
@@ -144,7 +145,7 @@ export function DietSection({ value, onChange }: Props) {
 }
 
 export function ApplianceSection({ value, onChange }: Props) {
-  return <ChipGrid options={APPLIANCES} selected={value.appliances} onChange={(appliances) => onChange({ ...value, appliances })} />;
+  return <ApplianceGrid options={APPLIANCES} selected={value.appliances} onChange={(appliances) => onChange({ ...value, appliances })} />;
 }
 
 export function StoreSection({ value, onChange }: Props) {

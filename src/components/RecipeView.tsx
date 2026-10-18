@@ -6,12 +6,21 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { C, F, R } from '@/lib/theme';
 import type { HelpTurn } from '@/lib/api';
-import type { Item, RecipeData } from '@/lib/types';
+import type { Item, RecipeData, StoreTotal } from '@/lib/types';
+import { recommend, round2 } from '../../supabase/functions/_shared/pricing';
 import { StepHelper } from './StepHelper';
 import { Body, Card, H1, H2, H3, Label, Muted, Pill, Sheet, money, type IconName } from './ui';
 
 /** helperRecipeId: when set, step numbers open the Frankly helper (on every recipe screen). */
-export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperRecipeId?: string }) {
+export function RecipeView({
+  data,
+  helperRecipeId,
+  onToggleHave,
+}: {
+  data: RecipeData;
+  helperRecipeId?: string;
+  onToggleHave?: (itemName: string, have: boolean) => void; // "I already have this" in the location sheet
+}) {
   const [applied, setApplied] = useState<string[]>([]);
   const [where, setWhere] = useState<Item | null>(null);
   const [help, setHelp] = useState<{ index: number; anchor: { y: number; h: number } } | null>(null);
@@ -22,16 +31,40 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
   const openHelp = (index: number) =>
     stepRefs.current[index]?.measureInWindow((_x, y, _w, h) => setHelp({ index, anchor: { y, h } }));
 
-  const bestId = data.recommended.locationId;
-  const best = data.totals.find((t) => t.locationId === bestId) ?? null;
+  // "I already have this" overrides, applied instantly; onToggleHave saves them.
+  const [haveOverride, setHaveOverride] = useState<Record<string, boolean>>({});
+  const isHave = (i: Item) => haveOverride[i.name] ?? i.already_have;
+  const toggleHave = (i: Item) => {
+    const next = !isHave(i);
+    setHaveOverride((o) => ({ ...o, [i.name]: next }));
+    onToggleHave?.(i.name, next);
+  };
+
+  // Totals are worked out here (same rules as the backend) so ticking items off updates everything live.
+  const toBuy = data.items.filter((i) => !isHave(i));
+  const totals: StoreTotal[] = data.stores.map((s) => {
+    let sum = 0;
+    let found = 0;
+    const missing: string[] = [];
+    for (const i of toBuy) {
+      const p = i.prices[s.locationId];
+      if (p) {
+        sum += p.cost;
+        found++;
+      } else missing.push(i.name);
+    }
+    return { locationId: s.locationId, name: s.name, distanceMi: s.distanceMi, total: round2(sum), found, missing };
+  });
+  const { best, reason } = recommend(totals, toBuy.length);
+  const bestId = best?.locationId ?? data.recommended.locationId;
   const bestStore = data.stores.find((s) => s.locationId === bestId);
-  const swaps = data.items.filter((i) => i.swap);
+  const swaps = toBuy.filter((i) => i.swap);
   const savings = swaps.filter((i) => applied.includes(i.name)).reduce((sum, i) => sum + (i.swap?.savings ?? 0), 0);
-  const estimated = data.estimated_total ?? 0;
+  const estimated = round2(toBuy.reduce((sum, i) => sum + (bestId && i.prices[bestId] ? 0 : (i.estimate?.cost ?? 0)), 0));
   const total = (best?.total ?? 0) + estimated - savings;
   const perServing = data.servings ? total / data.servings : null;
   const budget = data.budget_check.budget;
-  const maxTotal = Math.max(...data.totals.map((t) => t.total), 1);
+  const maxTotal = Math.max(...totals.map((t) => t.total), 1);
   const pricedAt = new Date(data.priced_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
   return (
@@ -67,11 +100,11 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
         {bestStore && (
           <View style={st.reason}>
             <Ionicons name="storefront-outline" size={18} color={C.good} />
-            <Body style={{ flex: 1, fontSize: 14 }}>{data.recommended.reason}</Body>
+            <Body style={{ flex: 1, fontSize: 14 }}>{reason}</Body>
           </View>
         )}
         <View style={{ gap: 8 }}>
-          {data.totals.map((t) => {
+          {totals.map((t) => {
             const isBest = t.locationId === bestId;
             const store = data.stores.find((s) => s.locationId === t.locationId);
             return (
@@ -92,7 +125,7 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
                   />
                 </View>
                 <Muted style={{ fontSize: 12 }}>
-                  {t.found} of {data.items.filter((i) => !i.already_have).length} items found
+                  {t.found} of {toBuy.length} items found
                 </Muted>
               </View>
             );
@@ -162,13 +195,17 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
                   </Body>
                   <Muted style={{ fontSize: 13 }}>{swapped ? item.swap!.amount_text : item.amount_text}</Muted>
                   {!pick && item.estimate?.where ? <Muted style={{ fontSize: 12, color: C.warn }}>Try {whereToFind(item.estimate.where)}</Muted> : null}
-                  {item.already_have ? (
+                  {isHave(item) ? (
                     <Pill tone="good" icon="home-outline" text="You already have this" />
                   ) : item.is_staple ? (
                     <Pill icon="bookmark-outline" text="Staple: remembered" />
                   ) : null}
                 </View>
-                {!item.already_have && (
+                {isHave(item) ? (
+                  <Pressable onPress={() => setWhere(item)} style={st.pin} hitSlop={8} accessibilityLabel={`Details for ${item.name}`}>
+                    <Ionicons name="checkmark" size={18} color={C.good} />
+                  </Pressable>
+                ) : (
                   <>
                     {pick ? (
                       <Text style={st.itemPrice}>{money(pick.cost)}</Text>
@@ -221,7 +258,13 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
         ))}
       </View>
 
-      <WhereSheet item={focused ? where : null} data={data} onClose={() => setWhere(null)} />
+      <WhereSheet
+        item={focused ? where : null}
+        data={data}
+        have={where ? isHave(where) : false}
+        onToggleHave={where ? () => toggleHave(where) : undefined}
+        onClose={() => setWhere(null)}
+      />
       {help && helperRecipeId && focused && (
         <StepHelper
           recipeId={helperRecipeId}
@@ -247,7 +290,19 @@ function Meta({ icon, text }: { icon: IconName; text: string }) {
 }
 
 /** The ingredient "location button": which product, which aisle, what it costs at each store. */
-function WhereSheet({ item, data, onClose }: { item: Item | null; data: RecipeData; onClose: () => void }) {
+function WhereSheet({
+  item,
+  data,
+  have,
+  onToggleHave,
+  onClose,
+}: {
+  item: Item | null;
+  data: RecipeData;
+  have: boolean;
+  onToggleHave?: () => void;
+  onClose: () => void;
+}) {
   if (!item) return null;
   const options = data.stores
     .map((s) => ({ store: s, pick: item.prices[s.locationId] }))
@@ -256,6 +311,18 @@ function WhereSheet({ item, data, onClose }: { item: Item | null; data: RecipeDa
   return (
     <Sheet visible onClose={onClose} title={`Where to find ${item.name}`}>
       <View style={{ gap: 10 }}>
+        {onToggleHave && (
+          <Pressable onPress={onToggleHave} style={({ pressed }) => [st.haveRow, have && st.haveRowOn, pressed && { transform: [{ scale: 0.98 }] }]}>
+            <Ionicons name={have ? 'checkbox' : 'square-outline'} size={24} color={have ? C.good : C.muted} />
+            <View style={{ flex: 1 }}>
+              <Body style={{ fontFamily: F.medium }}>I already have this</Body>
+              <Muted style={{ fontSize: 12 }}>
+                {have ? 'Taken off your shopping list and total.' : 'Tick it to take it off your list and total.'}
+                {item.is_staple ? ' Frankly will remember it.' : ''}
+              </Muted>
+            </View>
+          </Pressable>
+        )}
         {item.estimate && (
           <Card style={{ gap: 6, padding: 14, backgroundColor: C.warnSoft, borderColor: C.warnSoft }}>
             <H3>Not carried at these Kroger stores</H3>
@@ -316,6 +383,8 @@ const st = StyleSheet.create({
   ingredient: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 12 },
   divider: { borderTopWidth: 1, borderTopColor: C.line },
   itemPrice: { fontFamily: F.bold, fontSize: 15, color: C.ink },
+  haveRow: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: R.md, backgroundColor: C.cardAlt },
+  haveRowOn: { backgroundColor: C.goodSoft },
   pin: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.primarySoft, alignItems: 'center', justifyContent: 'center' },
   step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   stepNum: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginTop: 1 },

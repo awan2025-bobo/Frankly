@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 
 import { RecipeView } from '@/components/RecipeView';
 import { Button, EmptyState, Muted, Pill, Screen } from '@/components/ui';
-import { getActiveRecipe, saveForLater } from '@/lib/api';
+import { getActiveRecipe, saveForLater, setItemHave } from '@/lib/api';
 import { C } from '@/lib/theme';
 import type { Recipe } from '@/lib/types';
 
@@ -43,7 +43,12 @@ export default function Active() {
   return (
     <Screen>
       <Pill tone="bad" icon="flame" text="Cooking now" />
-      <RecipeView data={recipe.data} helperRecipeId={recipe.id} />
+      <RecipeView
+        key={recipe.id}
+        data={recipe.data}
+        helperRecipeId={recipe.id}
+        onToggleHave={(name, have) => setItemHave(recipe, name, have).then(setRecipe).catch(() => {})}
+      />
       <View style={{ gap: 10, marginTop: 8 }}>
         <Button title="I've finished" icon="checkmark-circle" onPress={() => router.push(`/finish/${recipe.id}`)} />
         <Button

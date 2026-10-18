@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState, type ComponentType } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Cooking } from '@/components/Cooking';
+import { SizzlingPan } from '@/components/Loaders';
 import {
   ApplianceSection,
   CuisineSection,
@@ -54,11 +54,9 @@ export default function Onboarding() {
 
   if (building) {
     return (
-      <View style={{ flex: 1, backgroundColor: C.bg }}>
-        <Cooking
-          title="Building your Frankly…"
-          lines={['Saving your tastes', 'Learning your kitchen', 'Finding stores near you', 'Ready to cook']}
-        />
+      <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', gap: 18 }}>
+        <SizzlingPan size={200} />
+        <H1 style={{ textAlign: 'center' }}>Building your Frankly…</H1>
       </View>
     );
   }

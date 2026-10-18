@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BookShelf, shelfStyles, type ShelfItem } from '@/components/BookShelf';
+import { ChoppingLoader } from '@/components/Loaders';
 import { Body, Button, Card, H1, Muted, Pill, Sheet } from '@/components/ui';
 import { suggestDishes } from '@/lib/api';
 import { CUISINES } from '@/lib/options';
@@ -71,6 +72,7 @@ export default function Discover() {
         title="Not sure what to make?"
         subtitle="Ideas from your tastes, your ratings, and what you haven't cooked in a while."
         resetKey={cuisine}
+        loader={<ChoppingLoader text="Chopping up some ideas…" />}
         items={error ? [] : items}
         error={
           error ? (

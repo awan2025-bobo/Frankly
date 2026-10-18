@@ -17,6 +17,7 @@ import {
   getFeedback,
   getRecipe,
   saveForLater,
+  setItemHave,
   startRecipe,
 } from '@/lib/api';
 import { C } from '@/lib/theme';
@@ -119,7 +120,12 @@ export default function RecipeScreen() {
         </Card>
       )}
 
-      <RecipeView data={recipe.data} helperRecipeId={recipe.id} />
+      <RecipeView
+        key={recipe.id}
+        data={recipe.data}
+        helperRecipeId={recipe.id}
+        onToggleHave={(name, have) => setItemHave(recipe, name, have).then(setRecipe).catch(() => {})}
+      />
 
       {error && <Muted style={{ color: C.bad }}>{error}</Muted>}
 

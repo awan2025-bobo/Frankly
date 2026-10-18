@@ -39,6 +39,7 @@ export function BookShelf({
   control,
   items,
   loadingText = 'Pulling cookbooks off the shelf…',
+  loader,
   error,
   empty,
   footer,
@@ -52,6 +53,7 @@ export function BookShelf({
   control?: ReactNode; // under the title, e.g. the cuisine dropdown (always visible)
   items: ShelfItem[] | null;
   loadingText?: string;
+  loader?: ReactNode; // custom loading animation (e.g. the chopping board on Not sure?)
   error?: ReactNode;
   empty?: ReactNode;
   footer?: ReactNode;
@@ -101,9 +103,13 @@ export function BookShelf({
           contentContainerStyle={[st.list, { paddingTop: padTop, paddingBottom: padBottom }]}>
           {error}
           {!items && !error && (
-            <View style={{ alignItems: 'center', gap: 8, height: SLOT, justifyContent: 'center' }}>
-              <ActivityIndicator color={C.primary} />
-              <Muted>{loadingText}</Muted>
+            <View style={{ alignItems: 'center', gap: 8, minHeight: SLOT, justifyContent: 'center' }}>
+              {loader ?? (
+                <>
+                  <ActivityIndicator color={C.primary} />
+                  <Muted>{loadingText}</Muted>
+                </>
+              )}
             </View>
           )}
           {items?.length === 0 && empty}
