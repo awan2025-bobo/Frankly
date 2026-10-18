@@ -9,7 +9,7 @@ import type { Item, RecipeData } from '@/lib/types';
 import { StepHelper } from './StepHelper';
 import { Body, Card, H1, H2, H3, Label, Muted, Pill, Sheet, money, type IconName } from './ui';
 
-/** helperRecipeId: when set (the Active recipe), step numbers open the Frankly helper. */
+/** helperRecipeId: when set, step numbers open the Frankly helper (on every recipe screen). */
 export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperRecipeId?: string }) {
   const [applied, setApplied] = useState<string[]>([]);
   const [where, setWhere] = useState<Item | null>(null);

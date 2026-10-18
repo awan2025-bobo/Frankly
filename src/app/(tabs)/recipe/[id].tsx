@@ -111,7 +111,7 @@ export default function RecipeScreen() {
         </Card>
       )}
 
-      <RecipeView data={recipe.data} />
+      <RecipeView data={recipe.data} helperRecipeId={recipe.id} />
 
       {error && <Muted style={{ color: C.bad }}>{error}</Muted>}
 
