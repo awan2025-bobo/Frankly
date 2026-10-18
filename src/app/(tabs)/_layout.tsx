@@ -13,6 +13,8 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
+      // Recipe, book pages, I've finished and Preferences live in this group too, so the bar never disappears.
+      backBehavior="history"
       tabBar={(props) => <TabBar {...props} />}>
       <Tabs.Screen name="active" />
       <Tabs.Screen name="cookbook" />

@@ -18,18 +18,22 @@ const TABS: Record<string, { label: string; icon: IconName; iconOn: IconName }> 
 // Cream icons on olive, like the MOYA bottom bar; inactive tabs are faded cream.
 const FADED = 'rgba(238,232,220,0.62)';
 
+// Pages that live inside the tabs but aren't tabs themselves: which tab stays highlighted.
+const PARENT: Record<string, string> = { 'cookbook/[book]': 'cookbook', preferences: 'profile' };
+
 export function TabBar({ state, navigation }: BottomTabBarProps) {
+  const current = state.routes[state.index]?.name;
   const insets = useSafeAreaInsets();
   return (
     <View style={[st.bar, { paddingBottom: Math.max(insets.bottom, 10) }]}>
       {state.routes.map((route, index) => {
         const tab = TABS[route.name];
         if (!tab) return null;
-        const focused = state.index === index;
+        const focused = state.index === index || PARENT[current] === route.name;
         const center = route.name === 'index';
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+          if (state.index !== index && !event.defaultPrevented) navigation.navigate(route.name, route.params);
         };
         if (center) {
           return (

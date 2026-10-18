@@ -19,7 +19,15 @@ export default function Finish() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Stays mounted inside the tabs: start fresh for each recipe.
   useEffect(() => {
+    setRecipe(null);
+    setEnjoyment(8);
+    setCooking(7);
+    setPrices(8);
+    setLeftovers('as_expected');
+    setSaving(false);
+    setError(null);
     getRecipe(id).then(setRecipe);
   }, [id]);
 

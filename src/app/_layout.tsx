@@ -35,7 +35,6 @@ function Gate() {
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: C.bg } }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="onboarding" options={{ gestureEnabled: false }} />
-      <Stack.Screen name="finish/[id]" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }

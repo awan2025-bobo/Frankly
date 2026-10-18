@@ -3,7 +3,7 @@
 //   saved  (Cookbook):       Let's go / Tweak recipe / Delete
 //   cooked (Cookbook):       Cook it again / Delete, plus the ratings it got
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
@@ -34,14 +34,24 @@ export default function RecipeScreen() {
 
   const load = useCallback(async () => {
     const r = await getRecipe(id);
+    setFeedback(null);
     setRecipe(r);
     if (r?.status === 'draft' && r.data.budget_check.status !== 'ok') setBudgetPopup(true);
     if (r?.status === 'cooked') setFeedback(await getFeedback(r.id));
   }, [id]);
 
+  // This page stays mounted inside the tabs: clear it when a different recipe opens, reload on every visit.
   useEffect(() => {
-    load().catch((e) => setError(String(e)));
-  }, [load]);
+    setRecipe(null);
+    setBudgetPopup(false);
+    setTweakOpen(false);
+    setError(null);
+  }, [id]);
+  useFocusEffect(
+    useCallback(() => {
+      load().catch((e) => setError(String(e)));
+    }, [load]),
+  );
 
   async function run(label: string, fn: () => Promise<void>) {
     setBusy(label);
