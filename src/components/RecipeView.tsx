@@ -1,15 +1,24 @@
 // The full recipe page: price breakdown, store comparison, swaps, ingredients, steps.
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { C, F, R } from '@/lib/theme';
+import type { HelpTurn } from '@/lib/api';
 import type { Item, RecipeData } from '@/lib/types';
+import { StepHelper } from './StepHelper';
 import { Body, Card, H1, H2, H3, Label, Muted, Pill, Sheet, money, type IconName } from './ui';
 
-export function RecipeView({ data }: { data: RecipeData }) {
+/** helperRecipeId: when set (the Active recipe), step numbers open the Frankly helper. */
+export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperRecipeId?: string }) {
   const [applied, setApplied] = useState<string[]>([]);
   const [where, setWhere] = useState<Item | null>(null);
+  const [help, setHelp] = useState<{ index: number; anchor: { y: number; h: number } } | null>(null);
+  const [chats, setChats] = useState<Record<number, HelpTurn[]>>({});
+  const stepRefs = useRef<(View | null)[]>([]);
+
+  const openHelp = (index: number) =>
+    stepRefs.current[index]?.measureInWindow((_x, y, _w, h) => setHelp({ index, anchor: { y, h } }));
 
   const bestId = data.recommended.locationId;
   const best = data.totals.find((t) => t.locationId === bestId) ?? null;
@@ -171,17 +180,45 @@ export function RecipeView({ data }: { data: RecipeData }) {
       {/* Steps */}
       <View style={{ gap: 8 }}>
         <H2>Steps</H2>
+        {helperRecipeId && <Muted style={{ fontSize: 13 }}>Stuck? Tap a step number to ask Frankly.</Muted>}
         {data.steps.map((step, idx) => (
-          <View key={idx} style={st.step}>
-            <View style={st.stepNum}>
-              <Text style={st.stepNumText}>{idx + 1}</Text>
-            </View>
+          <View
+            key={idx}
+            style={st.step}
+            ref={(el) => {
+              stepRefs.current[idx] = el;
+            }}>
+            {helperRecipeId ? (
+              <Pressable
+                onPress={() => openHelp(idx)}
+                hitSlop={10}
+                accessibilityLabel={`Ask Frankly about step ${idx + 1}`}
+                style={({ pressed }) => [st.stepNum, st.stepNumHelp, pressed && { transform: [{ scale: 0.9 }, { rotate: '-8deg' }] }]}>
+                <Text style={st.stepNumText}>{idx + 1}</Text>
+                {chats[idx]?.length ? <View style={st.askedDot} /> : null}
+              </Pressable>
+            ) : (
+              <View style={st.stepNum}>
+                <Text style={st.stepNumText}>{idx + 1}</Text>
+              </View>
+            )}
             <Body style={{ flex: 1 }}>{step.replace(/^\d+[.)]\s*/, '')}</Body>
           </View>
         ))}
       </View>
 
       <WhereSheet item={where} data={data} onClose={() => setWhere(null)} />
+      {help && helperRecipeId && (
+        <StepHelper
+          recipeId={helperRecipeId}
+          stepIndex={help.index}
+          stepText={data.steps[help.index]?.replace(/^\d+[.)]\s*/, '') ?? ''}
+          anchor={help.anchor}
+          history={chats[help.index] ?? []}
+          onHistory={(next) => setChats((c) => ({ ...c, [help.index]: next }))}
+          onClose={() => setHelp(null)}
+        />
+      )}
     </View>
   );
 }
@@ -259,4 +296,6 @@ const st = StyleSheet.create({
   step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   stepNum: { width: 28, height: 28, borderRadius: 14, backgroundColor: C.primary, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
   stepNumText: { fontFamily: F.bold, color: C.onPrimary, fontSize: 13 },
+  stepNumHelp: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: C.accentSoft },
+  askedDot: { position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, backgroundColor: C.accent, borderWidth: 2, borderColor: C.bg },
 });

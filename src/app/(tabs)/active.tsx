@@ -43,7 +43,7 @@ export default function Active() {
   return (
     <Screen>
       <Pill tone="bad" icon="flame" text="Cooking now" />
-      <RecipeView data={recipe.data} />
+      <RecipeView data={recipe.data} helperRecipeId={recipe.id} />
       <View style={{ gap: 10, marginTop: 8 }}>
         <Button title="I've finished" icon="checkmark-circle" onPress={() => router.push(`/finish/${recipe.id}`)} />
         <Button

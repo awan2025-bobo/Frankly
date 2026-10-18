@@ -34,6 +34,19 @@ export function generateRecipe(req: RecipeRequest) {
   return invoke<{ recipe?: Recipe; problem?: string }>('recipe', req);
 }
 
+export type HelpTurn = { q: string; a: string; on_topic: boolean };
+
+/** The Frankly helper: a question about one step of the active recipe. */
+export function askStep(recipeId: string, stepIndex: number, question: string, history: HelpTurn[]) {
+  if (DEMO) return demo.askStep(stepIndex, question);
+  return invoke<{ on_topic: boolean; answer: string; limited?: boolean }>('step-help', {
+    recipe_id: recipeId,
+    step_index: stepIndex,
+    question,
+    history: history.filter((h) => h.on_topic).slice(-3).map(({ q, a }) => ({ q, a })),
+  });
+}
+
 export function suggestDishes(cuisine: string) {
   if (DEMO) return demo.suggestDishes(cuisine);
   return invoke<{ dishes: Suggestion[] }>('suggest', { cuisine });

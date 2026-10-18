@@ -28,6 +28,10 @@ The MVP doc (`docs/MVP.md`) says to run every suggestion past the team first. Th
 - **Kroger teaching note applies again** (see `CLAUDE.md` and `docs/KROGER.md`).
 - #2 still holds with Kroger: Claude gives each ingredient a search term and amount; code picks Kroger products and does all price math.
 
+## Frankly helper (approved Oct 17 evening)
+
+Tap a step number on the Active recipe to ask a question about that step. Guardrails: server-side only, own recipe only, 300-char questions, last 3 exchanges, 20 questions/user/hour, structured on-topic flag with a fixed off-topic message, short answers, allergens + owned equipment + USDA food-safety rules; health questions get food-safety facts + "check with your doctor". Model: Sonnet 5.5 (tested sharper than Haiku on tricky questions, same speed; switch with the HELP_MODEL secret). Quick-question chips approved.
+
 ## Later (team said: remember, not now)
 
 Proposed by Claude to fit Cook Smarter better; the team deferred all of them:

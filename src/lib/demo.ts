@@ -286,6 +286,24 @@ export async function generateRecipe(req: {
   return { recipe };
 }
 
+// ---------- Frankly helper (demo) ----------
+
+const OFF_TOPIC = "I can only help with this recipe 🍳 Try asking about this step, an ingredient, timing, or a swap.";
+
+/** Demo-mode helper: simple keyword answers so the UI can be tried without the backend. */
+export async function askStep(_stepIndex: number, question: string): Promise<{ on_topic: boolean; answer: string }> {
+  await wait(900);
+  const q = question.toLowerCase();
+  if (/python|code|vote|election|capital|ignore (all|previous)|stock|weather/.test(q)) return { on_topic: false, answer: OFF_TOPIC };
+  if (/done|cooked|ready|pink|temp/.test(q))
+    return { on_topic: true, answer: 'Go by temperature, not color: chicken is safe at 165°F (74°C) in the thickest part, away from the bone. No thermometer? Juices should run clear and the meat should pull easily from the bone.' };
+  if (/substitut|instead|swap|don.?t have|replace/.test(q))
+    return { on_topic: true, answer: 'Usually yes: swap like for like (another vinegar for vinegar, another dried herb for bay leaves) and use the same amount. Taste near the end and adjust salt or acid.' };
+  if (/ahead|tomorrow|leftover|store|reheat|fridge/.test(q))
+    return { on_topic: true, answer: "Cool it and refrigerate within 2 hours; it keeps 3-4 days. Reheat on the stovetop until it's steaming hot (165°F / 74°C)." };
+  return { on_topic: true, answer: '(Demo mode) Connect the backend for real answers. Tip: keep the heat steady and taste as you go; most steps are forgiving.' };
+}
+
 // ---------- What-should-I-make agent (demo) ----------
 
 const IDEAS: Record<string, [string, string][]> = {
