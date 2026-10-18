@@ -81,3 +81,9 @@ create policy "own feedback" on public.feedback
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy "own pantry" on public.pantry_items
   for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+
+-- Explicit table access for signed-in users (anonymous sign-ins use the `authenticated` role).
+-- Needed when the project's "Automatically expose new tables" setting is off; harmless when it's on.
+-- Row-level security above still limits every user to their own rows.
+grant usage on schema public to authenticated;
+grant select, insert, update, delete on public.profiles, public.recipes, public.feedback, public.pantry_items to authenticated;
