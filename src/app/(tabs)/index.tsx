@@ -2,14 +2,14 @@
 // The kitchen stage (src/components/Veggies.tsx) animates along: veggies fly into a pot on submit,
 // the pot stays docked through the questions, sizzles while the recipe generates, then pops.
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Logo } from '@/components/Logo';
 import { InlinePot, VeggieStage, type StageMode } from '@/components/Veggies';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';
-import { generateRecipe } from '@/lib/api';
+import { generateRecipe, getRecipe } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F } from '@/lib/theme';
 import type { Leftovers } from '@/lib/types';
@@ -40,6 +40,9 @@ export default function Home() {
   const [leftovers, setLeftovers] = useState<Leftovers>('some');
   const [problem, setProblem] = useState<string | null>(null);
   const [finishedId, setFinishedId] = useState<string | null>(null);
+  // The last recipe Frankly made that you haven't acted on yet (Let's go / Save / Not feeling it).
+  // A new recipe isn't saved anywhere until then, so Home keeps a way back to it.
+  const [lastDraft, setLastDraft] = useState<{ id: string; title: string } | null>(null);
   const [line, setLine] = useState(0);
   const askOpacity = useRef(new Animated.Value(1)).current;
 
@@ -64,9 +67,22 @@ export default function Home() {
   // On the long preview slide the pot leaves the overlay and sits at the end of the content instead.
   const stage: StageMode = finishedId ? 'done' : step === 'ask' ? 'idle' : step === 'cooking' ? 'cooking' : step === 'preview' ? 'away' : 'docked';
 
+  // Whenever Home comes back into view, drop the link if that recipe was saved, started or dismissed.
+  useFocusEffect(
+    useCallback(() => {
+      if (!lastDraft) return;
+      getRecipe(lastDraft.id)
+        .then((r) => {
+          if (!r || r.status !== 'draft') setLastDraft(null);
+        })
+        .catch(() => {});
+    }, [lastDraft]),
+  );
+
   function showRecipe() {
     if (!finishedId) return;
     router.push(`/recipe/${finishedId}`);
+    getRecipe(finishedId).then((r) => r && setLastDraft({ id: r.id, title: r.title }));
     setFinishedId(null);
     setStep('ask');
     setDish('');
@@ -107,6 +123,14 @@ export default function Home() {
       {step === 'ask' && (
         <Animated.View style={{ flex: 1, opacity: askOpacity }}>
           <Logo size={40} />
+          {lastDraft && (
+            <Pressable onPress={() => router.push(`/recipe/${lastDraft.id}`)} style={st.draftLink}>
+              <Ionicons name="arrow-undo" size={14} color={C.primary} />
+              <Text style={st.draftText} numberOfLines={1}>
+                Back to your {lastDraft.title}
+              </Text>
+            </Pressable>
+          )}
           <View style={st.askWrap}>
             <Muted style={{ textAlign: 'center' }}>
               {greeting()}
@@ -242,6 +266,8 @@ const st = StyleSheet.create({
     paddingVertical: 10,
   },
   back: { flexDirection: 'row', alignItems: 'center', gap: 2, alignSelf: 'flex-start' },
+  draftLink: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', marginTop: 8, backgroundColor: C.primarySoft, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 8, maxWidth: '90%' },
+  draftText: { fontFamily: F.medium, fontSize: 13, color: C.primary },
   quick: { paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999, borderWidth: 1.5, borderColor: C.cardAlt, backgroundColor: C.cardAlt },
   quickOn: { backgroundColor: C.primary, borderColor: C.primary },
   quickText: { fontFamily: F.medium, fontSize: 14, color: C.ink },

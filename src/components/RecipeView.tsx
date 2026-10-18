@@ -1,5 +1,6 @@
 // The full recipe page: price breakdown, store comparison, swaps, ingredients, steps.
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useIsFocused } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -16,6 +17,7 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
   const [help, setHelp] = useState<{ index: number; anchor: { y: number; h: number } } | null>(null);
   const [chats, setChats] = useState<Record<number, HelpTurn[]>>({});
   const stepRefs = useRef<(View | null)[]>([]);
+  const focused = useIsFocused(); // hide popups when this screen isn't the one in view
 
   const openHelp = (index: number) =>
     stepRefs.current[index]?.measureInWindow((_x, y, _w, h) => setHelp({ index, anchor: { y, h } }));
@@ -219,8 +221,8 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
         ))}
       </View>
 
-      <WhereSheet item={where} data={data} onClose={() => setWhere(null)} />
-      {help && helperRecipeId && (
+      <WhereSheet item={focused ? where : null} data={data} onClose={() => setWhere(null)} />
+      {help && helperRecipeId && focused && (
         <StepHelper
           recipeId={helperRecipeId}
           stepIndex={help.index}

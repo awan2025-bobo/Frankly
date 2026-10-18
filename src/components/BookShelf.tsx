@@ -126,13 +126,14 @@ export function BookShelf({
         {/* Header: big at first, compresses upward as you scroll, comes back at the first book */}
         <Animated.View style={[st.header, { height: headerH }]}>
           {top}
+          {/* Space goes ABOVE the title, so the heading sits just over the first book (no awkward gap). */}
+          <View style={{ flex: 1 }} />
           <Animated.Text style={[st.title, { fontSize: titleSize, lineHeight: titleLine }]}>{title}</Animated.Text>
           {subtitle ? (
             <Animated.Text style={[st.sub, { opacity: subOpacity, maxHeight: subHeight }]} numberOfLines={2}>
               {subtitle}
             </Animated.Text>
           ) : null}
-          <View style={{ flex: 1 }} />
           {control}
         </Animated.View>
       </View>
@@ -255,16 +256,16 @@ function OpenBook({
 
   useEffect(() => {
     Animated.sequence([
-      Animated.timing(fly, { toValue: 1, duration: 420, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
-      Animated.timing(cover, { toValue: 1, duration: 560, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
+      Animated.timing(fly, { toValue: 1, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: false }),
+      Animated.timing(cover, { toValue: 1, duration: 340, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
     ]).start();
   }, [fly, cover]);
 
   // Same animation in reverse, but quicker on the way out. `then` runs after it's closed.
   const close = (then?: () => void) =>
     Animated.sequence([
-      Animated.timing(cover, { toValue: 0, duration: 220, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
-      Animated.timing(fly, { toValue: 0, duration: 190, easing: Easing.in(Easing.cubic), useNativeDriver: false }),
+      Animated.timing(cover, { toValue: 0, duration: 150, easing: Easing.inOut(Easing.cubic), useNativeDriver: false }),
+      Animated.timing(fly, { toValue: 0, duration: 130, easing: Easing.in(Easing.cubic), useNativeDriver: false }),
     ]).start(() => {
       onClosed();
       then?.();
@@ -290,11 +291,14 @@ function OpenBook({
       <Animated.View style={[{ position: 'absolute' }, box]}>
         <Animated.View style={[st.page, { opacity: cover.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }) }]}>
           <View style={[st.pageSpine, { backgroundColor: color }]} />
-          <View style={{ flex: 1, padding: 22, gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            {/* Scrolls when the details are longer than the page. */}
+            <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 22, gap: 12 }} showsVerticalScrollIndicator={false}>
+              {renderPage(item, (then?: () => void) => close(then))}
+            </ScrollView>
             <Pressable onPress={() => close()} hitSlop={12} style={{ position: 'absolute', right: 16, top: 16, zIndex: 2 }}>
               <Ionicons name="close" size={24} color={C.muted} />
             </Pressable>
-            {renderPage(item, (then?: () => void) => close(then))}
           </View>
         </Animated.View>
 

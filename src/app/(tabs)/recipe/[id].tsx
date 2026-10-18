@@ -3,7 +3,7 @@
 //   saved  (Cookbook):       Let's go / Tweak recipe / Delete
 //   cooked (Cookbook):       Cook it again / Delete, plus the ratings it got
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
@@ -22,11 +22,16 @@ import {
 import { C } from '@/lib/theme';
 import type { Feedback, Recipe } from '@/lib/types';
 
+const budgetShown = new Set<string>();
+
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [budgetPopup, setBudgetPopup] = useState(false);
+  // This screen stays mounted inside the tabs: only show popups while it's the screen in view,
+  // and the over-budget popup only the first time you open each recipe.
+  const focused = useIsFocused();
   const [tweakOpen, setTweakOpen] = useState(false);
   const [tweak, setTweak] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
@@ -36,7 +41,10 @@ export default function RecipeScreen() {
     const r = await getRecipe(id);
     setFeedback(null);
     setRecipe(r);
-    if (r?.status === 'draft' && r.data.budget_check.status !== 'ok') setBudgetPopup(true);
+    if (r?.status === 'draft' && r.data.budget_check.status !== 'ok' && !budgetShown.has(r.id)) {
+      budgetShown.add(r.id);
+      setBudgetPopup(true);
+    }
     if (r?.status === 'cooked') setFeedback(await getFeedback(r.id));
   }, [id]);
 
@@ -166,7 +174,7 @@ export default function RecipeScreen() {
 
       {/* Budget or other parameter unrealistic */}
       <Popup
-        visible={budgetPopup}
+        visible={budgetPopup && focused}
         title={check.status === 'swaps' ? 'Just over budget' : 'This is over your budget'}
         message={
           check.status === 'swaps'
@@ -186,7 +194,7 @@ export default function RecipeScreen() {
       />
 
       <Popup
-        visible={tweakOpen}
+        visible={tweakOpen && focused}
         title="Tweak this recipe"
         message="What should Frankly change?"
         icon="color-wand-outline"

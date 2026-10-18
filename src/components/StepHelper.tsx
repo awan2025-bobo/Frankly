@@ -61,11 +61,9 @@ export function StepHelper({
     };
   }, []);
 
-  // Sit just above the step; below it if there's no room; and always above the keyboard.
+  // Float in the middle of the screen; while the keyboard is open, sit just above it.
   useEffect(() => {
-    const above = anchor.y - cardH - 10;
-    let y = above >= 56 ? above : anchor.y + anchor.h + 10;
-    y = Math.min(y, height - kb - cardH - 12);
+    let y = kb > 0 ? height - kb - cardH - 12 : (height - cardH) / 2;
     y = Math.max(y, 48);
     Animated.spring(top, { toValue: y, useNativeDriver: false, speed: 16, bounciness: 5 }).start();
   }, [anchor.y, anchor.h, cardH, kb, height, top]);
@@ -122,7 +120,12 @@ export function StepHelper({
         </Text>
 
         {(history.length > 0 || pending) && (
-          <ScrollView ref={scroll} style={{ maxHeight: 230 }} contentContainerStyle={{ gap: 8, paddingVertical: 4 }}>
+          <ScrollView
+            ref={scroll}
+            style={{ maxHeight: 230 }}
+            contentContainerStyle={{ gap: 8, paddingVertical: 4 }}
+            // Open at (and stay on) the latest message, not the top of a long chat.
+            onContentSizeChange={() => scroll.current?.scrollToEnd({ animated: false })}>
             {history.map((h, i) => (
               <View key={i} style={{ gap: 6 }}>
                 <View style={st.qBubble}>
