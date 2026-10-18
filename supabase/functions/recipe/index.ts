@@ -43,13 +43,21 @@ const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["name", "amount_text", "is_staple", "already_have", ...shopKeys],
+        required: ["name", "amount_text", "is_staple", "already_have", ...shopKeys, "estimate_usd", "where_to_find"],
         properties: {
           name: { type: "string" },
           amount_text: { type: "string", description: "Human amount, e.g. '2 cups' or '1 lb'" },
           is_staple: { type: "boolean", description: "Long-lasting pantry item: salt, oils, dried spices, sauces, flour, sugar, vinegar" },
           already_have: { type: "boolean", description: "True only if it matches a staple they already have at home" },
           ...shopSpec,
+          estimate_usd: {
+            type: "number",
+            description: "Typical US retail price for the package(s) you'd buy for this amount. Used ONLY if Kroger doesn't carry it, and always shown as an estimate.",
+          },
+          where_to_find: {
+            type: "string",
+            description: "If this is a specialty item a regular US supermarket may not carry, where to look (e.g. 'an Asian grocery like H Mart'). Empty string for everyday items.",
+          },
         },
       },
     },
@@ -79,6 +87,8 @@ type Ingredient = Shop & {
   amount_text: string;
   is_staple: boolean;
   already_have: boolean;
+  estimate_usd: number;
+  where_to_find: string;
   swap: Shop & { has_swap: boolean; name: string; amount_text: string; reason: string };
 };
 type SwapSpec = Shop & { for_ingredient: string; name: string; amount_text: string; reason: string };
@@ -115,6 +125,11 @@ Rules:
 - Mark long-lasting pantry items as is_staple. Set already_have=true only when it matches one of their staples at home.
 - Shopping specs: generic search terms as you would type on a grocery site; one must_include word; exclude words that
   would match the wrong product. Solids in g, liquids in ml, whole items (eggs, onions, lemons) in count.
+- For every ingredient also give estimate_usd (a realistic typical US price, not a guess to impress) and
+  where_to_find for specialty items regular supermarkets may lack (e.g. biang biang noodles -> 'an Asian grocery like H Mart').
+  For specialty items, must_include must be the DISTINCTIVE word, never the generic one: Chinese black vinegar ->
+  'black' (not 'vinegar'), gochujang -> 'gochujang', rice cakes for tteokbokki -> 'rice cake'. A wrong product is worse
+  than none: if the supermarket version would be a different thing, keep the strict word and let it be estimated.
 - Swaps: list up to 3 cheaper alternatives for the most expensive ingredients (genuinely good ones only).
   for_ingredient must match that ingredient's name exactly. An empty list is fine.
 - Steps: clear, numbered-style instructions, one action each, 6-12 steps.`;
@@ -132,11 +147,20 @@ async function pool<T>(jobs: (() => Promise<T>)[], limit = 40): Promise<T[]> {
   return out;
 }
 
-async function priceAt(spec: Shop, store: Store, leftovers: "none" | "some" | "lots"): Promise<Pick | null> {
+async function priceAt(spec: Shop & { where_to_find?: string; name?: string }, store: Store, leftovers: "none" | "some" | "lots"): Promise<Pick | null> {
+  const want = `${spec.name ?? ""} ${spec.search_term}`; // lets "cup noodles" match only when noodles are the ingredient
   try {
     const found = await searchProducts(spec.search_term, store.locationId);
-    const fits = found.filter((c) => relevant(c, spec.must_include, spec.exclude));
-    return choose(fits, spec, leftovers);
+    const fits = found.filter((c) => relevant(c, spec.must_include, spec.exclude, want));
+    if (fits.length) return choose(fits, spec, leftovers);
+    // Retry once with just the key word, but never for specialty items: a near-miss there is a wrong product,
+    // so those fall through to the labeled estimate instead.
+    const specialty = !!spec.where_to_find?.trim();
+    if (!specialty && spec.must_include && spec.must_include.toLowerCase() !== spec.search_term.toLowerCase()) {
+      const again = await searchProducts(spec.must_include, store.locationId);
+      return choose(again.filter((c) => relevant(c, spec.must_include, spec.exclude, want)), spec, leftovers);
+    }
+    return null;
   } catch (e) {
     console.error("price lookup failed", spec.search_term, store.name, e);
     return null;
@@ -231,6 +255,11 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
         swap = { name: ing.swap.name, amount_text: ing.swap.amount_text, reason: ing.swap.reason, pick: alt, savings: round2(orig.cost - alt.cost) };
       }
     }
+    // Failsafe: not sold at the recommended Kroger store -> show Claude's typical price, labeled as an estimate.
+    const missingHere = !ing.already_have && !(bestId && p[bestId]);
+    const estimate = missingHere && ing.estimate_usd > 0
+      ? { cost: round2(ing.estimate_usd), where: (ing.where_to_find || "").trim() }
+      : null;
     return {
       name: ing.name,
       amount_text: ing.amount_text,
@@ -238,10 +267,13 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
       already_have: ing.already_have,
       prices: p,
       swap,
+      estimate,
     };
   });
 
-  const total = best?.total ?? 0;
+  // Totals: live Kroger prices at the best store + clearly-labeled estimates for what it doesn't carry.
+  const estimatedTotal = round2(items.reduce((sum, i) => sum + (i.estimate?.cost ?? 0), 0));
+  const total = round2((best?.total ?? 0) + estimatedTotal);
   const swapSavings = round2(items.reduce((sum, i) => sum + (i.swap?.savings ?? 0), 0));
   const withSwaps = round2(total - swapSavings);
   const budget_check = {
@@ -266,6 +298,7 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
     totals,
     recommended: { locationId: bestId, reason },
     budget_check,
+    estimated_total: estimatedTotal,
     leftovers,
     priced_at: new Date().toISOString(),
   };

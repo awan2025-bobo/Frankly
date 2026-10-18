@@ -33,7 +33,7 @@ An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, 
 
 ## Rules
 
-- **Never let the AI invent stores, distances or prices.** Those come from the Kroger API only. Price math happens in code, not in Claude.
+- **Never let the AI invent stores or distances. Prices come from Kroger**; price math happens in code, not in Claude. Only exception (team request): if no nearby Kroger store carries an item, Claude's typical-US-price estimate is used, **always labeled "Estimate"** with a where-to-find hint, and called out in the total. A wrong product match is worse than an estimate.
 - **Secrets never ship in the app.** The Claude API key and Kroger client secret live only in Supabase Edge Function secrets. The app may hold only the Supabase URL and anon key.
 - **Never commit keys.** `.env` is gitignored. Keep variable names (no values) in `.env.example`. Share real keys privately between the two of you, never in the repo, Discord channels or screenshots.
 - **Split work by area, not by file**, so two Claudes don't edit the same file. Default split: Rick owns screens/UI, partner owns Supabase, Kroger and the data side. Record who owns what in `HANDOFF.md`.

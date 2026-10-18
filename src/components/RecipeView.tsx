@@ -25,7 +25,8 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
   const bestStore = data.stores.find((s) => s.locationId === bestId);
   const swaps = data.items.filter((i) => i.swap);
   const savings = swaps.filter((i) => applied.includes(i.name)).reduce((sum, i) => sum + (i.swap?.savings ?? 0), 0);
-  const total = (best?.total ?? 0) - savings;
+  const estimated = data.estimated_total ?? 0;
+  const total = (best?.total ?? 0) + estimated - savings;
   const perServing = data.servings ? total / data.servings : null;
   const budget = data.budget_check.budget;
   const maxTotal = Math.max(...data.totals.map((t) => t.total), 1);
@@ -53,6 +54,7 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
             <Label style={{ color: C.muted }}>Approx. price</Label>
             <Text style={st.bigPrice}>{money(total)}</Text>
             {perServing != null && <Muted>{money(perServing)} per serving</Muted>}
+            {estimated > 0 && <Muted style={{ fontSize: 12, color: C.warn }}>Includes ~{money(estimated)} estimated for specialty items</Muted>}
           </View>
           <Pill
             tone={total <= budget ? 'good' : 'bad'}
@@ -157,6 +159,7 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
                     {swapped ? item.swap!.name : item.name}
                   </Body>
                   <Muted style={{ fontSize: 13 }}>{swapped ? item.swap!.amount_text : item.amount_text}</Muted>
+                  {!pick && item.estimate?.where ? <Muted style={{ fontSize: 12, color: C.warn }}>Try {item.estimate.where}</Muted> : null}
                   {item.already_have ? (
                     <Pill tone="good" icon="home-outline" text="You already have this" />
                   ) : item.is_staple ? (
@@ -165,7 +168,16 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
                 </View>
                 {!item.already_have && (
                   <>
-                    <Text style={st.itemPrice}>{pick ? money(pick.cost) : 'not found'}</Text>
+                    {pick ? (
+                      <Text style={st.itemPrice}>{money(pick.cost)}</Text>
+                    ) : item.estimate ? (
+                      <View style={{ alignItems: 'flex-end', gap: 2 }}>
+                        <Text style={[st.itemPrice, { color: C.warn }]}>≈ {money(item.estimate.cost)}</Text>
+                        <Pill tone="warn" text="Estimate" />
+                      </View>
+                    ) : (
+                      <Text style={st.itemPrice}>not found</Text>
+                    )}
                     <Pressable onPress={() => setWhere(item)} style={st.pin} hitSlop={8}>
                       <Ionicons name="location" size={18} color={C.primary} />
                     </Pressable>
@@ -242,6 +254,16 @@ function WhereSheet({ item, data, onClose }: { item: Item | null; data: RecipeDa
   return (
     <Sheet visible onClose={onClose} title={`Where to find ${item.name}`}>
       <View style={{ gap: 10 }}>
+        {item.estimate && (
+          <Card style={{ gap: 6, padding: 14, backgroundColor: C.warnSoft, borderColor: C.warnSoft }}>
+            <H3>Not carried at these Kroger stores</H3>
+            <Body style={{ fontSize: 14 }}>
+              Estimated about {money(item.estimate.cost)}
+              {item.estimate.where ? `. Try ${item.estimate.where}.` : '.'}
+            </Body>
+            <Muted style={{ fontSize: 12 }}>Frankly&apos;s estimate of a typical US price, not a live store price.</Muted>
+          </Card>
+        )}
         {options.map(({ store, pick }) => (
           <Card key={store.locationId} style={[{ gap: 6, padding: 14 }, pick?.cost === cheapest && { borderColor: C.good }]}>
             <View style={st.rowBetween}>

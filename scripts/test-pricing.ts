@@ -50,3 +50,13 @@ assert.match(r.reason, /\$4\.00 less than QFC/);
 
 assert.ok(near(milesBetween({ lat: 47.6062, lng: -122.3321 }, { lat: 47.6553, lng: -122.3035 }), 3.6));
 console.log("pricing tests passed");
+
+// Ready-made products don't match raw ingredients (live bug: gochujang -> cup noodles).
+assert.equal(relevant(c("Nissin Cup Noodles Bistro Korean Gochujang Beef Noodles", "1 ct", 1.59), "gochujang", [], "Gochujang gochujang paste"), false);
+assert.equal(relevant(c("Mother-in-Law's Gochujang Fermented Chile Paste", "10 oz", 6.99), "gochujang", [], "Gochujang gochujang paste"), true);
+assert.equal(relevant(c("Kroger Ramen Noodles", "3 oz", 0.5), "noodle", [], "ramen noodles"), true);
+console.log("prepared-food guard tests passed");
+assert.equal(relevant(c("Kikkoman Gochujang Spicy Miso Teriyaki Sauce", "10 oz", 6.29), "gochujang", [], "Gochujang gochujang paste"), false);
+assert.equal(relevant(c("Kikkoman Soy Sauce", "15 fl oz", 3.29), "soy", [], "Soy sauce soy sauce"), true);
+assert.equal(relevant(c("Hunt's Tomato Sauce", "15 oz", 1.0), "tomato", [], "Roma tomatoes roma tomatoes"), false);
+console.log("sauce guard tests passed");

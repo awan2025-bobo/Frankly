@@ -87,12 +87,24 @@ export function packagesNeeded(sizeText: string, req: Requirement): number {
   return Math.min(Math.max(n, 1), 12);
 }
 
-/** Keeps only products whose name fits the ingredient, so "garlic" never picks garlic salt. */
-export function relevant(c: Candidate, mustInclude: string, exclude: string[]): boolean {
+// Ready-made products that often share a keyword with a raw ingredient ("Gochujang Beef Cup Noodles" vs gochujang).
+const PREPARED = [
+  "noodle", "ramen", "cup", "soup", "chips", "snack", "cracker", "candy", "cookie", "cereal", "meal kit", "bowl",
+  "dinner", "entree", "pizza", "sandwich", "burrito", "drink", "beverage", "soda", "juice", "tea", "jerky", "popcorn",
+  "sauce", "marinade", "dressing", "glaze", "teriyaki", "seasoning mix", "dip",
+];
+
+/**
+ * Keeps only products whose name fits the ingredient, so "garlic" never picks garlic salt.
+ * `ingredient` (name + search words) lets us reject ready-made products unless that's what the recipe wants.
+ */
+export function relevant(c: Candidate, mustInclude: string, exclude: string[], ingredient = ""): boolean {
   const d = `${c.description} ${c.brand}`.toLowerCase();
   const words = mustInclude.toLowerCase().split(/\s+/).filter(Boolean);
   if (words.length && !words.every((w) => d.includes(w.replace(/s$/, "")))) return false;
-  return !exclude.some((x) => x && d.includes(x.toLowerCase()));
+  if (exclude.some((x) => x && d.includes(x.toLowerCase()))) return false;
+  const want = ingredient.toLowerCase();
+  return !PREPARED.some((p) => new RegExp(`\\b${p}`).test(d) && !want.includes(p));
 }
 
 /**

@@ -50,6 +50,8 @@ export type Item = {
   already_have: boolean;
   prices: Record<string, Pick | null>;
   swap: { name: string; amount_text: string; reason: string; pick: Pick; savings: number } | null;
+  // Not sold at the recommended Kroger store: a typical price, always shown as an estimate.
+  estimate?: { cost: number; where: string } | null;
 };
 
 export type StoreTotal = {
@@ -79,6 +81,7 @@ export type RecipeData = {
   leftovers: Leftovers;
   priced_at: string;
   demo?: boolean; // sample prices from demo mode, not Kroger
+  estimated_total?: number; // part of the price that's estimated (items Kroger doesn't carry)
 };
 
 export type RecipeStatus = 'draft' | 'active' | 'saved' | 'cooked' | 'dismissed';
