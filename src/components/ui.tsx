@@ -98,7 +98,10 @@ export function Button({
       ) : (
         <>
           {icon && <Ionicons name={icon} size={18} color={fg} />}
-          <Text style={[s.btnText, { color: fg }]}>{title}</Text>
+          {/* Long labels ("Show me the Sunflower Seed Butter & Jelly Sandwich") shrink a little and wrap. */}
+          <Text style={[s.btnText, title.length > 26 && s.btnTextLong, { color: fg }]} numberOfLines={3}>
+            {title}
+          </Text>
         </>
       )}
     </Pressable>
@@ -289,6 +292,7 @@ export function Popup({
   onClose: () => void;
   children?: ReactNode;
 }) {
+  const { height } = useWindowDimensions();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={s.backdrop}>
@@ -298,7 +302,12 @@ export function Popup({
             <Ionicons name={icon} size={26} color={C.primary} />
           </View>
           <H2 style={{ textAlign: 'center' }}>{title}</H2>
-          {message ? <Body style={{ textAlign: 'center', color: C.muted }}>{message}</Body> : null}
+          {message ? (
+            // Long explanations scroll inside the popup, so the buttons always stay on screen.
+            <ScrollView style={{ maxHeight: height * 0.4, alignSelf: 'stretch' }} contentContainerStyle={{ flexGrow: 0 }} bounces={false}>
+              <Body style={{ textAlign: 'center', color: C.muted }}>{message}</Body>
+            </ScrollView>
+          ) : null}
           {children}
           <View style={{ gap: 8, alignSelf: 'stretch', marginTop: 8 }}>
             {actions.map((a) => (
@@ -363,6 +372,7 @@ export const s = StyleSheet.create({
     minHeight: 52,
     borderRadius: R.pill,
     paddingHorizontal: 22,
+    paddingVertical: 10, // lets the button grow when the label wraps
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -371,7 +381,8 @@ export const s = StyleSheet.create({
   btnPrimary: { backgroundColor: C.primary, ...shadow },
   btnSecondary: { backgroundColor: C.cardAlt, borderWidth: 1.5, borderColor: C.cardAlt },
   btnGhost: { backgroundColor: 'transparent' },
-  btnText: { fontFamily: F.bold, fontSize: 16 },
+  btnText: { fontFamily: F.bold, fontSize: 16, textAlign: 'center', flexShrink: 1 },
+  btnTextLong: { fontSize: 14, lineHeight: 19 },
   card: { backgroundColor: C.card, borderRadius: R.lg, padding: 18, gap: 10, borderWidth: 1, borderColor: C.line, ...shadow },
   chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
