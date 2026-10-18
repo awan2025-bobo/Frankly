@@ -1,6 +1,6 @@
 // Code-level safety net for allergies, diets and equipment.
 //
-// Claude is told the rules, but a judge only needs ONE peanut in a "nut-free" recipe, so every
+// Claude is told the rules, but ONE peanut in a "nut-free" recipe is one too many, so every
 // recipe and suggestion is also checked here with plain word lists. Shared by the Edge Functions
 // (Deno) and the tests (scripts/test-safety.ts, run with tsx), so: no imports, no Deno APIs.
 //

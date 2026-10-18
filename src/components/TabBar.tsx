@@ -1,4 +1,4 @@
-// Bottom navigation from the MVP: Active Recipe, Cookbook, Home (center), "Don't know?", Profile.
+// Bottom navigation: Active Recipe, Cookbook, Home (center), "Not sure?", Profile.
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -16,7 +16,7 @@ const TABS: Record<string, { label: string; icon: IconName; iconOn: IconName }> 
   profile: { label: 'Profile', icon: 'person-outline', iconOn: 'person' },
 };
 
-// Cream icons on olive, like the MOYA bottom bar; inactive tabs are faded cream.
+// Cream icons on the olive bar; inactive tabs are faded cream.
 const FADED = 'rgba(238,232,220,0.62)';
 
 // Pages that live inside the tabs but aren't tabs themselves: which tab stays highlighted.

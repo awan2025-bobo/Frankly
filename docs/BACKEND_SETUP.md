@@ -21,7 +21,7 @@ That's everything: no Google Maps and no other APIs.
 4. **Project Settings → API** (may be under "Data API" / "API Keys"). Copy:
    - **Project URL**, like `https://abcdxyz.supabase.co`. The part before `.supabase.co` is your **project ref**.
    - **anon / publishable key**. This one is safe to put in the app.
-5. Optional: Organization → Team → invite your partner.
+5. Optional: Organization → Team → invite your teammates.
 
 ## 2. Claude API key (≈3 min)
 
@@ -58,9 +58,9 @@ Set the three secrets (**type your real values yourself**, they stay on Supabase
 npx.cmd supabase secrets set ANTHROPIC_API_KEY=sk-ant-... KROGER_CLIENT_ID=... KROGER_CLIENT_SECRET=...
 ```
 
-Deploy the three functions:
+Deploy the four functions:
 ```bash
-npx.cmd supabase functions deploy kroger-stores recipe suggest
+npx.cmd supabase functions deploy kroger-stores recipe suggest step-help
 ```
 
 ## 5. Point the app at it (≈2 min)
@@ -70,7 +70,7 @@ Create a file named `.env` in the `Frankly` folder (it's gitignored) with:
 EXPO_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
-Share this `.env` with your partner privately (same values work on both laptops).
+The same `.env` works on every laptop you run the app from.
 
 ## 6. Test
 

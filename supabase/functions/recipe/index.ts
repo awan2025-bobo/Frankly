@@ -201,7 +201,7 @@ async function pool<T>(jobs: (() => Promise<T>)[], limit = 40): Promise<T[]> {
   return out;
 }
 
-/** For the demo, any Asian-grocery hint just says "H Mart". */
+/** Any Asian-grocery hint is shown as "H Mart", the one most students here know. */
 function whereToFind(raw: string): string {
   const w = (raw || "").trim();
   return /asian|h[\s-]?mart|korean|chinese|japanese|thai|vietnamese|filipino|indian|international/i.test(w) ? "H Mart" : w;

@@ -1,4 +1,4 @@
-// Kroger Developer API client. Walkthrough for Rick: docs/KROGER.md.
+// Kroger Developer API client. How it works, step by step: docs/KROGER.md.
 //
 // Kroger uses OAuth2 "client credentials": we trade our app's client ID + secret
 // for an access token (valid ~30 min), then send that token on every request.

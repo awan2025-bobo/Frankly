@@ -37,7 +37,7 @@ export default function Profile() {
         </View>
       </View>
 
-      {/* Kitchen clipart behind the card, like the mountain card in the team's reference */}
+      {/* Kitchen clipart behind the card */}
       <View style={st.memory}>
         <KitchenScene />
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

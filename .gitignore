@@ -171,10 +171,3 @@ supabase/.branches/
 .agent-test-users.json
 agent-test-results.json
 
-# Private team notes (kept locally, not in the public repo)
-CLAUDE.md
-AGENTS.md
-HANDOFF.md
-docs/DECISIONS.md
-docs/MVP.md
-.claude/

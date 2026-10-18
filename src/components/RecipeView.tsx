@@ -412,7 +412,7 @@ const st = StyleSheet.create({
   askedDot: { position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, backgroundColor: C.accent, borderWidth: 2, borderColor: C.bg },
 });
 
-/** For the demo, any Asian-grocery hint just says "H Mart" (also fixes recipes saved before this rule). */
+/** Any Asian-grocery hint is shown as "H Mart", the one most students here know (older saved recipes too). */
 function whereToFind(raw: string): string {
   const w = (raw || '').trim();
   return /asian|h[\s-]?mart|korean|chinese|japanese|thai|vietnamese|filipino|indian|international/i.test(w) ? 'H Mart' : w;

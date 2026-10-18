@@ -1,4 +1,4 @@
-// Home's kitchen stage: flat clipart vegetables (DubHacks kitchen style) and a cooking pot.
+// Home's kitchen stage: flat clipart vegetables and a cooking pot.
 //   idle    -> vegetables bob and drift around the edges
 //   docked  -> a pot glides up from the bottom and the vegetables fly into it
 //   away    -> the pot drops out of the overlay (the preview slide shows <InlinePot/> at the end of its content)

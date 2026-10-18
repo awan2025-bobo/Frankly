@@ -43,7 +43,7 @@ export function serve(handler: (req: Request, db: SupabaseClient, userId: string
   });
 }
 
-// Claude Opus 5.5 in fast mode (team asked for faster + smarter for judging; was Sonnet 5.5).
+// Claude Opus 5.5 in fast mode: the smartest model, at a speed that feels responsive in the app.
 // Fast mode generates up to ~2.5x faster at premium pricing. If the account can't use it (or it's
 // rate-limited), we retry the same request on regular Opus 5.5 so the app never breaks.
 export const MODEL = "claude-opus-5-5";

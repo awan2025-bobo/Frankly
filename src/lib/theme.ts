@@ -1,4 +1,4 @@
-// Frankly's palette, matched to the MOYA reference: beige paper, olive-matcha green,
+// Frankly's palette: beige paper, olive-matcha green,
 // "dirty" green and beige bubbles, and a muted orange accent for warnings.
 export const C = {
   bg: '#EEE8DC', // beige paper
