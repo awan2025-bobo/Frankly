@@ -12,9 +12,18 @@ import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, S
 import { generateRecipe, getRecipe } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F } from '@/lib/theme';
-import type { Leftovers } from '@/lib/types';
+import type { Leftovers, SafetyNote } from '@/lib/types';
 
 type Step = 'ask' | 'servings' | 'budget' | 'preview' | 'cooking';
+
+const NOTICE_ICONS: Record<string, 'shield-checkmark' | 'leaf' | 'flame' | 'medkit' | 'wallet-outline' | 'help-circle'> = {
+  allergy: 'shield-checkmark',
+  diet: 'leaf',
+  equipment: 'flame',
+  food_safety: 'medkit',
+  budget: 'wallet-outline',
+  not_food: 'help-circle',
+};
 
 const AGENT_LINES = [
   'Reading your tastes and kitchen…',
@@ -40,6 +49,7 @@ export default function Home() {
   const [leftovers, setLeftovers] = useState<Leftovers>('some');
   const [style, setStyle] = useState('Classic'); // Classic | one of their cuisines | Surprise me
   const [problem, setProblem] = useState<string | null>(null);
+  const [notice, setNotice] = useState<SafetyNote | null>(null);
   const [finishedId, setFinishedId] = useState<string | null>(null);
   // The last recipe Frankly made that you haven't acted on yet (Let's go / Save / Not feeling it).
   // A new recipe isn't saved anywhere until then, so Home keeps a way back to it.
@@ -104,19 +114,21 @@ export default function Home() {
   const budgetNum = Number(budget);
   const quick = [8, 12, 15, 20, 30].map((b) => Math.round(b * Math.max(1, servings / 2)));
 
-  async function cook() {
+  async function cook(what: string = dish) {
     setStep('cooking');
     try {
       const res = await generateRecipe({
-        dish: dish.trim(),
+        dish: what.trim(),
         servings,
         budget: budgetNum,
         leftovers,
         style: style === 'Classic' ? 'classic' : style === 'Surprise me' ? 'surprise' : style,
       });
       if (res.problem || !res.recipe) {
-        setProblem(res.problem ?? 'Frankly could not make that work.');
-        setStep('budget');
+        // Clashes with their allergies/diet/kitchen, unsafe, not food, or an impossible budget: explain, offer a dish they can make.
+        if (res.conflict) setNotice(res.conflict);
+        else setProblem(res.problem ?? 'Frankly could not make that work.');
+        setStep(res.conflict?.kind === 'budget' ? 'budget' : 'preview');
         return;
       }
       setFinishedId(res.recipe.id); // the pot pops, then showRecipe() runs
@@ -251,7 +263,7 @@ export default function Home() {
             </Muted>
           </View>
           <H2>Looks right?</H2>
-          <Button title="Yes, cook it up" icon="flame" onPress={cook} />
+          <Button title="Yes, cook it up" icon="flame" onPress={() => cook()} />
           <Button title="Change preferences" kind="secondary" onPress={() => router.push('/preferences')} />
           <InlinePot />
         </View>
@@ -263,6 +275,32 @@ export default function Home() {
         message={problem ?? ''}
         onClose={() => setProblem(null)}
         actions={[{ label: 'Change my request', onPress: () => setProblem(null) }]}
+      />
+
+      {/* Nothing safe could be made: say why, and offer something they CAN make */}
+      <Popup
+        visible={!!notice}
+        title={notice?.title ?? ''}
+        message={notice?.message}
+        icon={NOTICE_ICONS[notice?.kind ?? ''] ?? 'information-circle'}
+        onClose={() => setNotice(null)}
+        actions={[
+          ...(notice?.alternative
+            ? [{
+                label: `Make ${notice.alternative}`,
+                onPress: () => {
+                  const alt = notice.alternative!;
+                  setNotice(null);
+                  setDish(alt);
+                  cook(alt);
+                },
+              }]
+            : []),
+          ...(notice && ['allergy', 'diet', 'equipment'].includes(notice.kind)
+            ? [{ label: 'Update my preferences', kind: 'secondary' as const, onPress: () => { setNotice(null); router.push('/preferences'); } }]
+            : []),
+          { label: 'Change my request', kind: 'ghost' as const, onPress: () => { setNotice(null); setStep('ask'); } },
+        ]}
       />
     </Screen>
     <VeggieStage mode={stage} caption={step === 'cooking' ? AGENT_LINES[line] : undefined} onDone={showRecipe} />

@@ -63,6 +63,14 @@ export type StoreTotal = {
   missing: string[];
 };
 
+/** A clash between the request and the profile (or safety / budget / not food), explained in plain words. */
+export type SafetyNote = {
+  kind: 'allergy' | 'diet' | 'equipment' | 'food_safety' | 'budget' | 'not_food' | 'other';
+  title: string;
+  message: string;
+  alternative?: string; // when nothing could be made: a dish they CAN make instead
+};
+
 export type RecipeData = {
   title: string;
   description: string;
@@ -81,6 +89,7 @@ export type RecipeData = {
   leftovers: Leftovers;
   priced_at: string;
   demo?: boolean; // sample prices from demo mode, not Kroger
+  safety_note?: SafetyNote | null; // set when the request clashed with their allergies/diet/appliances/safety
   estimated_total?: number; // part of the price that's estimated (items Kroger doesn't carry)
 };
 

@@ -7,7 +7,7 @@
 //   - Claude must return { on_topic, answer }; if on_topic is false the app shows a fixed message
 //   - short answers (hard token cap), allergies + food safety always respected
 
-import { claudeJSON, json, serve } from "../_shared/common.ts";
+import { claudeJSON, describeAppliances, json, serve } from "../_shared/common.ts";
 
 const HOURLY_LIMIT = 20;
 // Model is configurable without a code change: `supabase secrets set HELP_MODEL=claude-sonnet-5-5`.
@@ -47,9 +47,12 @@ How to answer:
   eggs until set / 160°F). Don't leave cooked food out more than 2 hours (1 hour above 90°F).
   Never say pink-looking meat is unsafe or safe by color alone: temperature decides.
   Liquid that touched raw meat must be boiled before it's used as a sauce.
-- Respect the cook's allergies absolutely: never suggest an allergen; offer a safe swap instead.
+- Respect the cook's allergies and diet absolutely: if they ask to add something that breaks them, say no plainly,
+  name why (e.g. "peanut butter isn't safe with your peanut allergy"), and offer a safe swap. Never say "if you're not
+  actually allergic" or "it's up to you". If they claim the allergy or diet no longer applies, tell them to update it in Profile.
 - Only suggest equipment they own (listed with the cook below). If they don't own an oven, never
   suggest the oven: use the stovetop, microwave or what they do have.
+- Talk to the cook directly ("you", "your oven"), never about "the cook".
 - Plain, friendly, 1-4 short sentences. No lists unless they asked for steps. No disclaimers.`;
 
 serve(async (req, db, userId) => {
@@ -85,7 +88,7 @@ Ingredients: ${(d.items ?? []).map((i: { amount_text: string; name: string }) =>
 Steps:
 ${steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
 
-COOK: allergies: ${(profile?.allergens ?? []).join(", ") || "none"}; diet: ${(profile?.diets ?? []).join(", ") || "none"}; equipment: ${(profile?.appliances ?? []).join(", ") || "basic stovetop and oven"}.
+COOK: allergies (never suggest these, even as an option): ${(profile?.allergens ?? []).join(", ") || "none"}; diet (always follow): ${(profile?.diets ?? []).join(", ") || "none"}; equipment they own: ${describeAppliances(profile?.appliances)}.
 
 They are on step ${stepIndex + 1}: "${step}"
 ${history ? `Earlier in this chat:\n${history}\n` : ""}

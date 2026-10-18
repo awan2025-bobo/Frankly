@@ -21,15 +21,26 @@ import {
   startRecipe,
 } from '@/lib/api';
 import { C } from '@/lib/theme';
-import type { Feedback, Recipe } from '@/lib/types';
+import type { Feedback, Recipe, SafetyNote } from '@/lib/types';
 
 const budgetShown = new Set<string>();
+const noteShown = new Set<string>();
+
+const NOTE_ICONS: Record<string, 'shield-checkmark' | 'leaf' | 'flame' | 'medkit' | 'wallet-outline'> = {
+  allergy: 'shield-checkmark',
+  diet: 'leaf',
+  equipment: 'flame',
+  food_safety: 'medkit',
+  budget: 'wallet-outline',
+};
 
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [budgetPopup, setBudgetPopup] = useState(false);
+  const [notePopup, setNotePopup] = useState(false);
+  const [refusal, setRefusal] = useState<SafetyNote | null>(null); // a tweak Frankly said no to
   // This screen stays mounted inside the tabs: only show popups while it's the screen in view,
   // and the over-budget popup only the first time you open each recipe.
   const focused = useIsFocused();
@@ -42,6 +53,11 @@ export default function RecipeScreen() {
     const r = await getRecipe(id);
     setFeedback(null);
     setRecipe(r);
+    // "Heads up" first (what Frankly changed for their allergies/diet/kitchen), then the budget popup.
+    if (r?.status === 'draft' && r.data.safety_note && !noteShown.has(r.id)) {
+      noteShown.add(r.id);
+      setNotePopup(true);
+    }
     if (r?.status === 'draft' && r.data.budget_check.status !== 'ok' && !budgetShown.has(r.id)) {
       budgetShown.add(r.id);
       setBudgetPopup(true);
@@ -53,6 +69,7 @@ export default function RecipeScreen() {
   useEffect(() => {
     setRecipe(null);
     setBudgetPopup(false);
+    setNotePopup(false);
     setTweakOpen(false);
     setError(null);
   }, [id]);
@@ -178,9 +195,24 @@ export default function RecipeScreen() {
         )}
       </View>
 
+      {/* The request clashed with their profile: say what Frankly changed */}
+      {recipe.data.safety_note && (
+        <Popup
+          visible={notePopup && focused}
+          title={recipe.data.safety_note.title}
+          message={recipe.data.safety_note.message}
+          icon={NOTE_ICONS[recipe.data.safety_note.kind] ?? 'information-circle'}
+          onClose={() => setNotePopup(false)}
+          actions={[
+            { label: `Show me the ${recipe.data.title}`, onPress: () => setNotePopup(false) },
+            { label: 'Change my request', kind: 'ghost', onPress: () => { setNotePopup(false); dismissRecipe(recipe.id).finally(goBack); } },
+          ]}
+        />
+      )}
+
       {/* Budget or other parameter unrealistic */}
       <Popup
-        visible={budgetPopup && focused}
+        visible={budgetPopup && !notePopup && focused}
         title={check.status === 'swaps' ? 'Just over budget' : 'This is over your budget'}
         message={
           check.status === 'swaps'
@@ -219,7 +251,11 @@ export default function RecipeScreen() {
                   tweak: tweak.trim(),
                   base_recipe_id: recipe.id,
                 });
-                if (res.problem || !res.recipe) throw new Error(res.problem ?? 'Could not tweak it.');
+                if (res.problem || !res.recipe) {
+                  // e.g. "add peanuts" with a peanut allergy: explain why, keep the current recipe.
+                  setRefusal(res.conflict ?? { kind: 'other', title: "Frankly can't make that change", message: res.problem ?? 'Could not tweak it.' });
+                  return;
+                }
                 setTweak('');
                 router.replace(`/recipe/${res.recipe.id}`);
               });
@@ -229,6 +265,18 @@ export default function RecipeScreen() {
         ]}>
         <Field value={tweak} onChangeText={setTweak} placeholder="e.g. make it vegetarian, less spicy" style={{ alignSelf: 'stretch' }} />
       </Popup>
+
+      <Popup
+        visible={!!refusal && focused}
+        title={refusal?.title ?? ''}
+        message={refusal?.message}
+        icon={NOTE_ICONS[refusal?.kind ?? ''] ?? 'information-circle'}
+        onClose={() => setRefusal(null)}
+        actions={[
+          { label: 'Try a different change', onPress: () => { setRefusal(null); setTweakOpen(true); } },
+          { label: 'Keep this recipe', kind: 'ghost', onPress: () => setRefusal(null) },
+        ]}
+      />
     </Screen>
   );
 }

@@ -34,6 +34,7 @@ An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, 
 ## Rules
 
 - **Never let the AI invent stores or distances. Prices come from Kroger**; price math happens in code, not in Claude. Only exception (team request): if no nearby Kroger store carries an item, Claude's typical-US-price estimate is used, **always labeled "Estimate"** with a where-to-find hint, and called out in the total. A wrong product match is worse than an estimate.
+- **The profile beats the request.** Allergies, diets and appliances are enforced twice: in the agent prompts and in code (`supabase/functions/_shared/safety.ts`). A clash is never silently ignored or silently changed: the user gets a popup saying what Frankly did. Run `scripts/test-agents.ts` after changing any agent prompt.
 - **Secrets never ship in the app.** The Claude API key and Kroger client secret live only in Supabase Edge Function secrets. The app may hold only the Supabase URL and anon key.
 - **Never commit keys.** `.env` is gitignored. Keep variable names (no values) in `.env.example`. Share real keys privately between the two of you, never in the repo, Discord channels or screenshots.
 - **Split work by area, not by file**, so two Claudes don't edit the same file. Default split: Rick owns screens/UI, partner owns Supabase, Kroger and the data side. Record who owns what in `HANDOFF.md`.
@@ -61,6 +62,8 @@ npm install
 npx expo start          # scan QR with Expo Go; add --web for the browser
 npx tsc --noEmit        # type-check the app
 npx tsx scripts/test-pricing.ts   # price-math tests
+npx tsx scripts/test-safety.ts    # allergy/diet/appliance checker tests (offline)
+npx tsx scripts/test-agents.ts    # LIVE trick tests of every AI feature (costs a few $; add a word to filter, e.g. "vegan")
 npx supabase functions deploy recipe   # after changing an Edge Function
 ```
 

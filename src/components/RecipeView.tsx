@@ -138,6 +138,17 @@ export function RecipeView({
         </Muted>
       </Card>
 
+      {/* What Frankly changed because of an allergy, diet, appliance or safety clash */}
+      {data.safety_note ? (
+        <Card style={{ backgroundColor: C.accentSoft, borderColor: C.accentSoft }}>
+          <View style={st.rowGap}>
+            <Ionicons name="shield-checkmark" size={18} color={C.primary} />
+            <H3>Changed for your profile</H3>
+          </View>
+          <Body style={{ fontSize: 14 }}>{data.safety_note.message}</Body>
+        </Card>
+      ) : null}
+
       {/* Why */}
       {data.how_personalized ? (
         <Card style={{ backgroundColor: C.cardAlt }}>

@@ -3,7 +3,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import * as demo from './demo';
 import { DEMO, supabase } from './supabase';
-import type { Feedback, KrogerStore, Leftovers, Profile, Recipe, Suggestion } from './types';
+import type { Feedback, KrogerStore, Leftovers, Profile, Recipe, SafetyNote, Suggestion } from './types';
 
 async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke(name, { body });
@@ -29,10 +29,15 @@ export type RecipeRequest = {
   base_recipe_id?: string;
 };
 
-/** Returns either a saved draft recipe or a `problem` to show in the "try again" popup. */
-export function generateRecipe(req: RecipeRequest) {
+/**
+ * Returns a saved draft recipe, or a `problem` to show in the "try again" popup.
+ * `conflict` explains a clash with their profile: with a recipe it's the safe version Frankly made instead,
+ * without one it's why nothing could be made (and maybe an `alternative` dish to try).
+ */
+export type RecipeResult = { recipe?: Recipe; problem?: string; conflict?: SafetyNote | null };
+export function generateRecipe(req: RecipeRequest): Promise<RecipeResult> {
   if (DEMO) return demo.generateRecipe(req);
-  return invoke<{ recipe?: Recipe; problem?: string }>('recipe', req);
+  return invoke<RecipeResult>('recipe', req);
 }
 
 export type HelpTurn = { q: string; a: string; on_topic: boolean };

@@ -29,6 +29,15 @@ export function serve(handler: (req: Request, db: SupabaseClient, userId: string
       return await handler(req, db, data.user.id);
     } catch (e) {
       console.error(e);
+      // Never show a raw API error (or billing details) on screen: say it plainly instead.
+      if (e instanceof Anthropic.APIError) {
+        const busy = e.status === 429 || e.status === 529 || (e.status ?? 0) >= 500;
+        return json({
+          error: busy
+            ? "Frankly's chef is swamped right now. Give it a few seconds and try again."
+            : "Frankly's kitchen is closed for a moment (the AI service isn't available). Please try again soon.",
+        }, 503);
+      }
       return json({ error: e instanceof Error ? e.message : String(e) }, 500);
     }
   });
@@ -113,6 +122,13 @@ export async function loadMemory(db: SupabaseClient) {
 
 export type Memory = Awaited<ReturnType<typeof loadMemory>>;
 
+/** Onboarding starts with Stovetop checked, so an empty list means they unchecked everything: no heat at all. */
+export function describeAppliances(appliances: string[] | null | undefined): string {
+  return appliances?.length
+    ? appliances.join(", ")
+    : "NONE: no stovetop, oven, microwave or any heat source, so only no-cook food (assemble, chop, mix, marinate, soak)";
+}
+
 const daysAgo = (iso: string) => Math.round((Date.now() - new Date(iso).getTime()) / 86_400_000);
 
 /** Turns the user's memory into prompt text. */
@@ -122,8 +138,8 @@ export function describeMemory(m: Memory): string {
     `Name: ${p.name || "unknown"}. Cooks for: ${p.cooks_for === "others" ? `${p.household_size} people` : "themself"}.`,
     `Spice ${p.spice}/10, seasoning ${p.seasoning}/10, preferred difficulty ${p.difficulty}/10.`,
     `Cuisines they like: ${p.cuisines.join(", ") || "any"}.`,
-    `Diet: ${p.diets.join(", ") || "none"}. ALLERGIES (never include): ${p.allergens.join(", ") || "none"}.`,
-    `Appliances they own (only use these, plus a stovetop if listed): ${p.appliances.join(", ") || "unknown, assume a basic stovetop and oven"}.`,
+    `Diet (always follow): ${p.diets.join(", ") || "none"}. ALLERGIES (never include, not even traces or optional garnishes): ${p.allergens.join(", ") || "none"}.`,
+    `Appliances they own (only use these): ${describeAppliances(p.appliances)}.`,
     p.meals_per_week ? `Wants to cook about ${p.meals_per_week} times a week.` : "",
   ];
   if (m.history.length) {
