@@ -1,7 +1,7 @@
 // Price math for Frankly. Pure TypeScript (no Deno or network APIs) so it can be
 // unit-tested with Node: `npx tsx scripts/test-pricing.ts`.
 //
-// Rule from CLAUDE.md: Claude never invents prices. Claude says WHAT is needed
+// Rule: Claude never invents prices. Claude says WHAT is needed
 // (amounts + search words); this file decides WHICH Kroger product and HOW MANY
 // packages, using real sizes and prices.
 

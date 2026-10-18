@@ -1,6 +1,6 @@
-# Learning the Kroger API (for Rick)
+# How Frankly uses the Kroger API
 
-You asked to learn this, not just have it done. Each step below says **what it is**, **what you do**, and **where the code does it**.
+Frankly's live store locations and prices come from the Kroger Developer API. Each step below says **what it is**, **what you do**, and **where the code does it**.
 
 ## The big picture
 
@@ -21,7 +21,7 @@ The phone never sees the Kroger or Claude keys. Anyone can unpack an app and rea
    - **Scopes:** check **Product** (`product.compact`). That's all we need. Locations don't need a scope.
    - **Redirect URI:** if it asks, use `http://localhost`. We don't use it; it's only for logging in as a shopper.
 3. You'll get a **Client ID** and a **Client Secret**. Treat the secret like a password: never paste it in the repo, Discord or a screenshot.
-4. Save them as Supabase secrets (see "Setup" in `HANDOFF.md`):
+4. Save them as Supabase secrets (see `docs/BACKEND_SETUP.md`):
 
 ```bash
 npx supabase secrets set KROGER_CLIENT_ID=your-id KROGER_CLIENT_SECRET=your-secret

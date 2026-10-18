@@ -33,7 +33,7 @@ An alternative framing we may borrow from:
 - **MVP:** input budget, number of people and dietary needs → optimized meal plan with estimated total and cheaper substitutions.
 - **Its warning:** real-time grocery prices are hard in a weekend, so a small, transparent sample price dataset is enough to show the concept.
 
-How it differs from ours: it plans a whole week around a budget, while ours starts from one recipe the user picks. Both share pantry reuse and budget-first thinking. The Kroger API (see `CLAUDE.md`) gives us real prices. **A small sample dataset is the fallback** if Kroger access or rate limits block us during the event.
+How it differs from ours: it plans a whole week around a budget, while ours starts from one recipe the user picks. Both share pantry reuse and budget-first thinking. The Kroger API (see `docs/KROGER.md`) gives us real prices. **A small sample dataset is the fallback** if Kroger access or rate limits block us during the event.
 
 ## Track: Cook Smarter
 

@@ -28,7 +28,7 @@ That's everything: no Google Maps and no other APIs.
 1. console.anthropic.com → **Billing**: add ~$10.
 2. **Limits**: set a monthly spend limit (e.g. $15) so a bug can't run up a bill.
 3. **API Keys → Create key**, name `frankly`. Copy it now (it's shown once).
-   Frankly uses **Claude Sonnet 5.5**. One recipe costs roughly a cent or two.
+   Frankly uses **Claude Opus 5.5** (fast mode) for recipes and suggestions, and **Claude Sonnet 5.5** for the step helper.
 
 ## 3. Kroger Developer API (≈5 min)
 

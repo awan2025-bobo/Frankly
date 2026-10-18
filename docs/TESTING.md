@@ -30,7 +30,7 @@
 ## Demo mode vs. real backend
 
 - **No `.env` file** means **demo mode**: sample recipes and sample prices, data saved on the phone. A "Demo mode · sample prices" badge shows on Home.
-- **With `.env`** (Supabase URL + anon key, see `HANDOFF.md` → Setup), it uses the real Claude + Kroger backend. Restart the server after creating or changing `.env`.
+- **With `.env`** (Supabase URL + anon key, see `docs/BACKEND_SETUP.md`), it uses the real Claude + Kroger backend. Restart the server after creating or changing `.env`.
 - To start fresh: **Profile → Reset demo (start over)**.
 
 ## If it won't connect
@@ -40,6 +40,6 @@
 | "Incompatible with this version of Expo Go" | Project SDK is newer than App Store Expo Go. We're on **SDK 57** on purpose; don't upgrade. |
 | "Signed into Expo Go as X, but not signed into Expo CLI" | Sign **out** of Expo Go on the phone, **or** give the laptop a *personal* token for the same account (expo.dev → switch to the personal account, not the org → Account settings → Access tokens), then run `$env:EXPO_TOKEN = '...'` in that terminal before starting. Robot/org tokens don't work. |
 | Stuck on "Opening project…" | Check the terminal is still running. Then check the phone is on the same Wi-Fi. If the Wi-Fi blocks it, put the laptop on the phone's **Personal Hotspot** and restart. |
-| Red error screen | Read the error in the terminal (or paste it to Claude). |
+| Red error screen | Read the error in the terminal; it usually names the file and line. |
 
 Tunnel mode (`npx.cmd expo start --tunnel`) also exists for networks that block phone-to-laptop traffic. It needs a logged-in personal Expo account (not a robot token).
