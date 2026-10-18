@@ -1,5 +1,7 @@
 # Testing Frankly on a phone
 
+Frankly runs in **Expo Go** on iPhone or Android, straight from the dev server.
+
 ## Every time
 
 1. **Laptop:** open a terminal in the `Frankly` folder and pull the latest:

@@ -1,6 +1,6 @@
 // POST { recipe_id, step_index, question, history?: [{ q, a }] }
 //
-// The Frankly helper: answers a question about ONE step of the user's own recipe.
+// The Frankly step helper: answers a question about ONE step of the user's own recipe.
 // Guardrails (layered):
 //   - server-side only, signed-in users only, recipe must belong to the user (RLS)
 //   - question <= 300 chars, at most 3 earlier exchanges, rate limit 20 questions / hour

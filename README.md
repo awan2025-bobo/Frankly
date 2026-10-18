@@ -83,4 +83,4 @@ npx tsx scripts/test-agents.ts     # live end-to-end checks against the deployed
 
 ## License
 
-MIT
+MIT, see [LICENSE](LICENSE).

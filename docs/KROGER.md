@@ -1,6 +1,6 @@
 # How Frankly uses the Kroger API
 
-Frankly's live store locations and prices come from the Kroger Developer API. Each step below says **what it is**, **what you do**, and **where the code does it**.
+Frankly's live store locations and prices come from the Kroger Developer API (QFC and Fred Meyer are Kroger stores). Each step below says **what it is**, **what you do**, and **where the code does it**.
 
 ## The big picture
 

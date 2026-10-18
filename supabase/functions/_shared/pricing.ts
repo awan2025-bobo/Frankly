@@ -1,4 +1,4 @@
-// Price math for Frankly. Pure TypeScript (no Deno or network APIs) so it can be
+// Price math for Frankly (package counts, store totals, best store). Pure TypeScript (no Deno or network APIs) so it can be
 // unit-tested with Node: `npx tsx scripts/test-pricing.ts`.
 //
 // Rule: Claude never invents prices. Claude says WHAT is needed

@@ -1,4 +1,4 @@
-// "Cooking it up…" loader. The rotating lines show the steps the agent is taking.
+// "Cooking it up…" loader (used while a recipe is being tweaked). The rotating lines show the steps the agent is taking.
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
