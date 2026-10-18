@@ -54,7 +54,7 @@ Step-by-step guide: `docs/KROGER.md`. Rick asked to be **taught** the Kroger API
 
 ## Run the app
 
-Testing on a phone: `docs/TESTING.md`. First-time setup (Supabase, keys, deploy) is in `HANDOFF.md` → Setup. After that:
+Testing on a phone: `docs/TESTING.md`. Turning on the real backend: `docs/BACKEND_SETUP.md`. First-time setup (Supabase, keys, deploy) is in `HANDOFF.md` → Setup. After that:
 
 ```bash
 npm install
