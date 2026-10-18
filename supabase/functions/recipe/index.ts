@@ -147,6 +147,12 @@ async function pool<T>(jobs: (() => Promise<T>)[], limit = 40): Promise<T[]> {
   return out;
 }
 
+/** For the demo, any Asian-grocery hint just says "H Mart". */
+function whereToFind(raw: string): string {
+  const w = (raw || "").trim();
+  return /asian|h[\s-]?mart|korean|chinese|japanese|thai|vietnamese|filipino|indian|international/i.test(w) ? "H Mart" : w;
+}
+
 async function priceAt(spec: Shop & { where_to_find?: string; name?: string }, store: Store, leftovers: "none" | "some" | "lots"): Promise<Pick | null> {
   const want = `${spec.name ?? ""} ${spec.search_term}`; // lets "cup noodles" match only when noodles are the ingredient
   try {
@@ -258,7 +264,7 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
     // Failsafe: not sold at the recommended Kroger store -> show Claude's typical price, labeled as an estimate.
     const missingHere = !ing.already_have && !(bestId && p[bestId]);
     const estimate = missingHere && ing.estimate_usd > 0
-      ? { cost: round2(ing.estimate_usd), where: (ing.where_to_find || "").trim() }
+      ? { cost: round2(ing.estimate_usd), where: whereToFind(ing.where_to_find) }
       : null;
     return {
       name: ing.name,

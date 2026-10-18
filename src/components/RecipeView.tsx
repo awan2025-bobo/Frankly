@@ -159,7 +159,7 @@ export function RecipeView({ data, helperRecipeId }: { data: RecipeData; helperR
                     {swapped ? item.swap!.name : item.name}
                   </Body>
                   <Muted style={{ fontSize: 13 }}>{swapped ? item.swap!.amount_text : item.amount_text}</Muted>
-                  {!pick && item.estimate?.where ? <Muted style={{ fontSize: 12, color: C.warn }}>Try {item.estimate.where}</Muted> : null}
+                  {!pick && item.estimate?.where ? <Muted style={{ fontSize: 12, color: C.warn }}>Try {whereToFind(item.estimate.where)}</Muted> : null}
                   {item.already_have ? (
                     <Pill tone="good" icon="home-outline" text="You already have this" />
                   ) : item.is_staple ? (
@@ -259,7 +259,7 @@ function WhereSheet({ item, data, onClose }: { item: Item | null; data: RecipeDa
             <H3>Not carried at these Kroger stores</H3>
             <Body style={{ fontSize: 14 }}>
               Estimated about {money(item.estimate.cost)}
-              {item.estimate.where ? `. Try ${item.estimate.where}.` : '.'}
+              {item.estimate.where ? `. Try ${whereToFind(item.estimate.where)}.` : '.'}
             </Body>
             <Muted style={{ fontSize: 12 }}>Frankly&apos;s estimate of a typical US price, not a live store price.</Muted>
           </Card>
@@ -321,3 +321,9 @@ const st = StyleSheet.create({
   stepNumHelp: { width: 32, height: 32, borderRadius: 16, borderWidth: 2, borderColor: C.accentSoft },
   askedDot: { position: 'absolute', top: -2, right: -2, width: 10, height: 10, borderRadius: 5, backgroundColor: C.accent, borderWidth: 2, borderColor: C.bg },
 });
+
+/** For the demo, any Asian-grocery hint just says "H Mart" (also fixes recipes saved before this rule). */
+function whereToFind(raw: string): string {
+  const w = (raw || '').trim();
+  return /asian|h[\s-]?mart|korean|chinese|japanese|thai|vietnamese|filipino|indian|international/i.test(w) ? 'H Mart' : w;
+}
