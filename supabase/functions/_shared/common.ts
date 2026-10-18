@@ -51,21 +51,26 @@ export async function claudeJSON<T>(opts: {
   schema: Record<string, unknown>;
   effort: "low" | "medium" | "high";
   maxTokens?: number;
+  model?: string; // default: Opus 5.5 (fast mode). Haiku/Sonnet run at standard speed.
 }): Promise<T> {
+  const model = opts.model ?? MODEL;
+  const isOpus = model === MODEL;
+  // Server-side refusal fallback exists for Opus/Sonnet on the Claude API, not for Haiku.
+  const canFallback = !model.startsWith("claude-haiku");
   const request = (fast: boolean) =>
     anthropic.beta.messages.create({
-      model: MODEL,
+      model,
       max_tokens: opts.maxTokens ?? 12000,
-      betas: fast ? ["server-side-fallback-2026-07-01", "fast-mode-2026-02-01"] : ["server-side-fallback-2026-07-01"],
+      betas: [...(canFallback ? ["server-side-fallback-2026-07-01"] : []), ...(fast ? ["fast-mode-2026-02-01"] : [])],
       ...(fast ? { speed: "fast" as const } : {}),
-      fallbacks: "default", // if the model declines, the API retries on its recommended fallback
+      ...(canFallback ? { fallbacks: "default" as const } : {}), // if the model declines, the API retries on its recommended fallback
       system: opts.system,
       messages: [{ role: "user", content: opts.prompt }],
       output_config: { effort: opts.effort, format: { type: "json_schema", schema: opts.schema } },
     });
 
   let res;
-  if (fastModeAvailable) {
+  if (isOpus && fastModeAvailable) {
     try {
       res = await request(true);
     } catch (e) {
