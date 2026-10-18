@@ -9,10 +9,18 @@ import type { Candidate } from "./pricing.ts";
 const BASE = "https://api.kroger.com/v1";
 
 let cached: { token: string; expiresAt: number } | null = null;
+let inFlight: Promise<string> | null = null;
 
-/** Step 1: get (or reuse) an access token. */
-export async function krogerToken(): Promise<string> {
-  if (cached && Date.now() < cached.expiresAt - 60_000) return cached.token;
+/** Step 1: get (or reuse) an access token. Many lookups at once share one token request. */
+export function krogerToken(): Promise<string> {
+  if (cached && Date.now() < cached.expiresAt - 60_000) return Promise.resolve(cached.token);
+  inFlight ??= fetchToken().finally(() => {
+    inFlight = null;
+  });
+  return inFlight;
+}
+
+async function fetchToken(): Promise<string> {
   const id = Deno.env.get("KROGER_CLIENT_ID");
   const secret = Deno.env.get("KROGER_CLIENT_SECRET");
   if (!id || !secret) throw new Error("Kroger keys missing: set KROGER_CLIENT_ID and KROGER_CLIENT_SECRET");

@@ -4,7 +4,7 @@ Update this before you stop working, then commit and push. Newest status at the 
 
 **Every commit adds a line to the Change log at the bottom**, in the same commit, so the other Claude knows what happened.
 
-_Last updated: Sat Oct 17, 2026, 2:20 PM by Rick's Claude._
+_Last updated: Sat Oct 17, 2026 (evening) by Rick's Claude._
 
 ## Who owns what
 
@@ -76,6 +76,7 @@ App (`.env`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`. Supab
 
 Newest first. Format: `date time — who — what changed (and anything the other Claude must know)`.
 
+- Oct 17 — Rick's Claude — **Backend is LIVE** (Supabase project ref jdopgeoxvkffzdqlbock; tables pushed; ANTHROPIC + KROGER secrets set; 3 functions deployed). Switched to **Claude Opus 5.5 fast mode** (auto-falls back to standard Opus if fast mode is unavailable), effort low. Speedups: swaps are a separate short list in the schema (less output), Kroger lookups all in parallel with one shared token request. Live test: recipe ~9s (was ~21s: Claude ~6s, Kroger ~1.5s), suggestions ~5-6s. Zip geocoding uses zippopotam.us with OpenStreetMap backup; store names shortened (QFC University Village). Cost ~12-20¢/recipe: raise Console spend limit to ~$30 for judging. Recipe response includes a `timing` field for debugging.
 - Oct 17 — Rick's Claude — Migration now grants table access to `authenticated` explicitly, so it works whether or not the new Supabase "Automatically expose new tables" option is on. Project setup choices: Data API ON, automatic RLS ON.
 - Oct 17 — Rick's Claude — UI is in a good place (more UI/UX tweaks maybe later). **Next: backend.** Step-by-step guide in `docs/BACKEND_SETUP.md` (Supabase project + anonymous auth, Claude key, Kroger app, db push, secrets, deploy, .env, test). Rick wants to be walked through it and taught the Kroger part.
 - Oct 17 — Rick's Claude — **Shared `BookShelf`** (`src/components/BookShelf.tsx`): no more 3D wheel; books just shrink/shorten away from center and grow squarer at center; slots spaced so they never overlap. Used by Not sure? and now by Saved/Cooked books (open book page: Open full recipe / Let's go or Cook it again). **Bottom bar always visible:** recipe/[id], cookbook/[book], finish/[id], preferences moved into `src/app/(tabs)/` (tabs use backBehavior=history; TabBar highlights the parent tab). Those pages reset per id and reload on focus since tab screens stay mounted.

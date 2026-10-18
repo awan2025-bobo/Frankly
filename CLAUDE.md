@@ -18,7 +18,7 @@ Two people (Rick and his partner, GitHub `awan2025-bobo`) build this together, e
 
 An AI recipe-planning and grocery-optimization app. Onboarding (under a minute, optional questions skippable) captures household, taste sliders, cuisines, diet, allergens, appliances and usual stores. Five tabs: Active Recipe, Cookbook (Saved + Cooked "books"), Home ("What would you like to cook today?"), "Don't know what to make?", Profile. The agent builds a recipe within budget, prices it with **live Kroger prices** at nearby Kroger-family stores (QFC, Fred Meyer), suggests cheaper swaps, remembers staples (pantry is internal only, no pantry screen), and stores feedback + cooked dates to improve future suggestions. Full spec: `docs/MVP.md`.
 
-**Status:** first demo built (see `HANDOFF.md`). Not yet run against live services. Deferred ideas are under "Later" in `docs/DECISIONS.md`: don't build them unless the team asks.
+**Status:** first demo built AND the real backend is live (see `HANDOFF.md`). Claude model: Opus 5.5 fast mode. Deferred ideas are under "Later" in `docs/DECISIONS.md`: don't build them unless the team asks.
 
 ## Stack
 

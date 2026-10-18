@@ -7,7 +7,7 @@
 //   4. picks the best store, prices cheaper swaps, checks the budget
 //   5. saves the result as a draft recipe and returns it
 
-import { claudeJSON, describeMemory, json, loadMemory, serve } from "../_shared/common.ts";
+import { claudeJSON, describeMemory, json, lastSpeed, loadMemory, serve } from "../_shared/common.ts";
 import { searchProducts } from "../_shared/kroger.ts";
 import { choose, type Pick, recommend, relevant, type Requirement, round2, type StoreTotal } from "../_shared/pricing.ts";
 
@@ -26,7 +26,7 @@ const SCHEMA = {
   type: "object",
   additionalProperties: false,
   required: ["feasible", "problem", "title", "description", "cuisine", "servings", "fridge_days", "total_minutes",
-    "difficulty", "how_personalized", "ingredients", "steps"],
+    "difficulty", "how_personalized", "ingredients", "swaps", "steps"],
   properties: {
     feasible: { type: "boolean" },
     problem: { type: "string", description: "If not feasible, a short friendly reason and what to change. Empty otherwise." },
@@ -43,25 +43,29 @@ const SCHEMA = {
       items: {
         type: "object",
         additionalProperties: false,
-        required: ["name", "amount_text", "is_staple", "already_have", ...shopKeys, "swap"],
+        required: ["name", "amount_text", "is_staple", "already_have", ...shopKeys],
         properties: {
           name: { type: "string" },
           amount_text: { type: "string", description: "Human amount, e.g. '2 cups' or '1 lb'" },
           is_staple: { type: "boolean", description: "Long-lasting pantry item: salt, oils, dried spices, sauces, flour, sugar, vinegar" },
           already_have: { type: "boolean", description: "True only if it matches a staple they already have at home" },
           ...shopSpec,
-          swap: {
-            type: "object",
-            additionalProperties: false,
-            required: ["has_swap", "name", "amount_text", "reason", ...shopKeys],
-            properties: {
-              has_swap: { type: "boolean", description: "True for at most 3 of the priciest ingredients that have a good cheaper alternative" },
-              name: { type: "string" },
-              amount_text: { type: "string" },
-              reason: { type: "string", description: "Why it works, e.g. 'thighs are juicier and usually cheaper'" },
-              ...shopSpec,
-            },
-          },
+        },
+      },
+    },
+    // A short separate list (0-3) instead of a swap field on every ingredient: much less to write, so faster.
+    swaps: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["for_ingredient", "name", "amount_text", "reason", ...shopKeys],
+        properties: {
+          for_ingredient: { type: "string", description: "Exact name of the ingredient this replaces" },
+          name: { type: "string" },
+          amount_text: { type: "string" },
+          reason: { type: "string", description: "Why it works, e.g. 'thighs are juicier and usually cheaper'" },
+          ...shopSpec,
         },
       },
     },
@@ -77,7 +81,9 @@ type Ingredient = Shop & {
   already_have: boolean;
   swap: Shop & { has_swap: boolean; name: string; amount_text: string; reason: string };
 };
+type SwapSpec = Shop & { for_ingredient: string; name: string; amount_text: string; reason: string };
 type Draft = {
+  swaps: SwapSpec[];
   feasible: boolean;
   problem: string;
   title: string;
@@ -109,12 +115,12 @@ Rules:
 - Mark long-lasting pantry items as is_staple. Set already_have=true only when it matches one of their staples at home.
 - Shopping specs: generic search terms as you would type on a grocery site; one must_include word; exclude words that
   would match the wrong product. Solids in g, liquids in ml, whole items (eggs, onions, lemons) in count.
-- Swaps: give has_swap=true for up to 3 of the most expensive ingredients with a genuinely good cheaper alternative.
-  Everything else gets has_swap=false with empty strings and zeros.
+- Swaps: list up to 3 cheaper alternatives for the most expensive ingredients (genuinely good ones only).
+  for_ingredient must match that ingredient's name exactly. An empty list is fine.
 - Steps: clear, numbered-style instructions, one action each, 6-12 steps.`;
 
 /** Runs async jobs with at most `limit` in flight (keeps Kroger happy). */
-async function pool<T>(jobs: (() => Promise<T>)[], limit = 8): Promise<T[]> {
+async function pool<T>(jobs: (() => Promise<T>)[], limit = 40): Promise<T[]> {
   const out: T[] = new Array(jobs.length);
   let next = 0;
   await Promise.all(Array.from({ length: Math.min(limit, jobs.length) }, async () => {
@@ -163,15 +169,24 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
   }
 
   // Step 2: Claude writes the recipe + shopping specs.
+  const t0 = Date.now();
   const draft = await claudeJSON<Draft>({
     system: SYSTEM,
-    effort: "medium",
+    effort: "low",
     prompt: `What Frankly remembers about this user:\n${describeMemory(memory)}\n\n` +
       `Request: "${dish}" for ${servings} servings, target budget $${budget.toFixed(2)}, leftovers: ${leftovers}.` +
       tweakText,
     schema: SCHEMA,
   });
   if (!draft.feasible) return json({ problem: draft.problem || "Frankly couldn't make that work. Try changing the dish or budget." });
+
+  const claudeMs = Date.now() - t0;
+  // Attach each swap to its ingredient (the rest of the pipeline reads ing.swap).
+  const swapFor = new Map(draft.swaps.slice(0, 3).map((s) => [s.for_ingredient.trim().toLowerCase(), s]));
+  for (const ing of draft.ingredients) {
+    const s = swapFor.get(ing.name.trim().toLowerCase());
+    ing.swap = s ? { ...s, has_swap: true } : ({ has_swap: false } as Ingredient["swap"]);
+  }
 
   // Step 3: live prices for everything they need to buy, at every store.
   const toBuy = draft.ingredients.filter((i) => !i.already_have);
@@ -188,7 +203,10 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
       }
     }
   }
+  const t1 = Date.now();
   await pool(jobs);
+  const krogerMs = Date.now() - t1;
+  console.log(`timing: claude ${claudeMs}ms (${lastSpeed}), kroger ${krogerMs}ms for ${jobs.length} lookups`);
 
   // Step 4: totals per store, recommendation, swaps, budget check.
   const totals: StoreTotal[] = stores.map((s) => {
@@ -265,5 +283,5 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
     data,
   }).select().single();
   if (error) throw error;
-  return json({ recipe: row });
+  return json({ recipe: row, timing: { claudeMs, krogerMs, lookups: jobs.length, speed: lastSpeed } });
 });

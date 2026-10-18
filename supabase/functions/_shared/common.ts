@@ -34,11 +34,17 @@ export function serve(handler: (req: Request, db: SupabaseClient, userId: string
   });
 }
 
-// Claude Sonnet 5.5 (approved in docs/DECISIONS.md #14).
-export const MODEL = "claude-sonnet-5-5";
+// Claude Opus 5.5 in fast mode (team asked for faster + smarter for judging; was Sonnet 5.5).
+// Fast mode generates up to ~2.5x faster at premium pricing. If the account can't use it (or it's
+// rate-limited), we retry the same request on regular Opus 5.5 so the app never breaks.
+export const MODEL = "claude-opus-5-5";
 const anthropic = new Anthropic(); // reads ANTHROPIC_API_KEY from Supabase secrets
+let fastModeAvailable = true;
 
 /** One Claude call that must return JSON matching `schema` (structured outputs). */
+/** Which speed the last Claude call actually used ("fast" or "standard"), for timing logs. */
+export let lastSpeed = "standard";
+
 export async function claudeJSON<T>(opts: {
   system: string;
   prompt: string;
@@ -46,15 +52,33 @@ export async function claudeJSON<T>(opts: {
   effort: "low" | "medium" | "high";
   maxTokens?: number;
 }): Promise<T> {
-  const res = await anthropic.beta.messages.create({
-    model: MODEL,
-    max_tokens: opts.maxTokens ?? 12000,
-    betas: ["server-side-fallback-2026-07-01"],
-    fallbacks: "default", // if the model declines, the API retries on its recommended fallback
-    system: opts.system,
-    messages: [{ role: "user", content: opts.prompt }],
-    output_config: { effort: opts.effort, format: { type: "json_schema", schema: opts.schema } },
-  });
+  const request = (fast: boolean) =>
+    anthropic.beta.messages.create({
+      model: MODEL,
+      max_tokens: opts.maxTokens ?? 12000,
+      betas: fast ? ["server-side-fallback-2026-07-01", "fast-mode-2026-02-01"] : ["server-side-fallback-2026-07-01"],
+      ...(fast ? { speed: "fast" as const } : {}),
+      fallbacks: "default", // if the model declines, the API retries on its recommended fallback
+      system: opts.system,
+      messages: [{ role: "user", content: opts.prompt }],
+      output_config: { effort: opts.effort, format: { type: "json_schema", schema: opts.schema } },
+    });
+
+  let res;
+  if (fastModeAvailable) {
+    try {
+      res = await request(true);
+    } catch (e) {
+      // 400/403: fast mode not available for this account (stop trying). 429: fast-mode capacity, retry standard.
+      if (e instanceof Anthropic.BadRequestError || e instanceof Anthropic.PermissionDeniedError) fastModeAvailable = false;
+      else if (!(e instanceof Anthropic.RateLimitError)) throw e;
+      console.warn("fast mode unavailable, using standard Opus:", e instanceof Error ? e.message : e);
+      res = await request(false);
+    }
+  } else {
+    res = await request(false);
+  }
+  lastSpeed = (res.usage as { speed?: string }).speed ?? "standard";
   if (res.stop_reason === "refusal") throw new Error("Claude declined this request. Try a different dish.");
   if (res.stop_reason === "max_tokens") throw new Error("Recipe was too long. Try fewer servings or a simpler dish.");
   const text = res.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");

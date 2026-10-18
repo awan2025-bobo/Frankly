@@ -17,7 +17,7 @@ The MVP doc (`docs/MVP.md`) says to run every suggestion past the team first. Th
 | 11 | Accounts | **Supabase anonymous sign-in**: no login screen, but data survives app restarts (needed for the "refresh and history persists" demo). Settings gets a "Reset demo" button. | Approved |
 | 12 | "How many times do you want to cook" | It's mentioned at the top of the MVP doc but missing from the onboarding flow. Proposal: **optional** question (meals per week). The "What should I make?" tab uses it. | Approved |
 | 13 | Who builds the first version | **Rick's Claude one-shots the first demo on `main`.** The partner doesn't edit app code until it's pushed. After that, split by area as in `CLAUDE.md`. | Approved |
-| 14 | Claude model | **Claude Sonnet 5.5** (`claude-sonnet-5-5`) for recipes: good quality and fast enough for a live demo. | Approved |
+| 14 | Claude model | **Claude Sonnet 5.5** (`claude-sonnet-5-5`) for recipes: good quality and fast enough for a live demo. | **Changed (Oct 17 evening):** team asked for faster + smarter for judging, now **Claude Opus 5.5 fast mode** |
 | 15 | Kroger API | **Moved to stretch goal.** The MVP says no live pricing; if there's time after the MVP works, swap one demo store for real Kroger prices (and do the Kroger teaching then). | **Changed:** Kroger is in the MVP (see below) |
 
 ## Team decisions on Oct 17, ~1:15 PM
