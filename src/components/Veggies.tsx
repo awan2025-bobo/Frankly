@@ -14,15 +14,14 @@ import { C, F } from '@/lib/theme';
 
 // ---------- Art ----------
 
+// Whole tomato: round body, a soft shine and a green star-shaped top with a little stem.
 const Tomato = () => (
   <Svg viewBox="0 0 64 64">
-    <Circle cx={33} cy={34} r={27} fill="#B9472E" />
-    <Circle cx={31} cy={32} r={27} fill="#DE6644" />
-    <Circle cx={31} cy={32} r={21} fill="#EE8E68" />
-    {[0, 72, 144, 216, 288].map((a) => (
-      <Ellipse key={a} cx={31} cy={20} rx={5.5} ry={8} fill="#F5B996" transform={`rotate(${a} 31 32)`} />
-    ))}
-    <Circle cx={31} cy={32} r={4} fill="#F7C9A8" />
+    <Ellipse cx={33} cy={37} rx={26} ry={24} fill="#B9472E" />
+    <Ellipse cx={31} cy={35} rx={26} ry={24} fill="#DE6644" />
+    <Ellipse cx={20} cy={28} rx={6} ry={3.5} fill="#EE8E68" transform="rotate(-35 20 28)" />
+    <Path d="M31 13C26 10 22 11 18 13c4 1 6 2 7 3-2 2-3 4-3 7 3-2 6-4 9-5 3 1 6 3 9 5 0-3-1-5-3-7 1-1 3-2 7-3-4-2-8-3-13 0z" fill="#6E9A3C" />
+    <Path d="M30 13c0-4 1-7 4-9" stroke="#5E7F38" strokeWidth={3} strokeLinecap="round" fill="none" />
   </Svg>
 );
 
@@ -37,24 +36,30 @@ const Mushroom = () => (
   </Svg>
 );
 
+// Whole red onion: a bulb with a pointed top, skin lines and little roots.
+const ONION_BULB = 'M32 9c2 6 8 10 14 15 8 8 7 21-3 27-6 4-16 4-22 0C11 45 10 32 18 24c6-5 12-9 14-15z';
 const Onion = () => (
   <Svg viewBox="0 0 64 64">
-    <Ellipse cx={33} cy={34} rx={27} ry={25} fill="#8E2E57" />
-    <Ellipse cx={31} cy={32} rx={27} ry={25} fill="#C9578A" />
-    <Ellipse cx={31} cy={32} rx={23} ry={21} fill="#F3CFDF" />
-    {[17, 12, 7].map((r) => (
-      <Ellipse key={r} cx={31} cy={32} rx={r} ry={r * 0.92} fill="none" stroke="#C9578A" strokeWidth={2} />
-    ))}
+    <Path d={ONION_BULB} fill="#8E2E57" transform="translate(2 2)" />
+    <Path d={ONION_BULB} fill="#C9578A" />
+    <Path d="M32 13c-7 10-9 24-6 38M32 13c7 10 9 24 6 38" stroke="#A8406F" strokeWidth={2} strokeLinecap="round" fill="none" />
+    <Ellipse cx={21} cy={35} rx={3.5} ry={8} fill="#F3CFDF" opacity={0.75} transform="rotate(15 21 35)" />
+    <Path d="M32 10c-1-3 0-6 3-8" stroke="#8E2E57" strokeWidth={2.5} strokeLinecap="round" fill="none" />
+    <Path d="M28 54l-2 5M32 55v5M36 54l2 5" stroke="#B88E52" strokeWidth={1.8} strokeLinecap="round" />
   </Svg>
 );
 
-const Pepper = () => (
+// Bok choy: pale stalks gathered at the base, three dark leaves fanning out on top.
+const BOK_STALK = 'M20 32c0 14 5 25 12 28 7-3 12-14 12-28z';
+const BokChoy = () => (
   <Svg viewBox="0 0 64 64">
-    <Path
-      fillRule="evenodd"
-      d="M32 6c7 0 10 4 15 4 6 0 11 6 10 13-1 5 3 8 2 15-1 9-8 14-14 15-5 1-8 5-13 5S24 54 19 53c-7-1-13-7-13-16 0-6 3-8 2-14C7 15 13 10 19 10c5 0 7-4 13-4zm0 9c-4 0-6 3-10 3-4 0-7 3-7 8 0 4-2 6-1 10 1 6 5 9 9 9 4 0 6 4 9 4s5-4 9-4 8-3 9-9c0-4-2-6-1-10 0-5-3-8-7-8-4 0-6-3-10-3z"
-      fill="#6E9A3C"
-    />
+    <Path d={BOK_STALK} fill="#A9BB7A" transform="translate(2 1)" />
+    <Path d={BOK_STALK} fill="#E3EBC8" />
+    <Path d="M27 35c0 11 2 19 5 24M37 35c0 11-2 19-5 24" stroke="#A9BB7A" strokeWidth={1.8} strokeLinecap="round" fill="none" />
+    <Path d="M24 36C9 31 3 15 12 3c11 2 18 13 18 31z" fill="#5E7F38" />
+    <Path d="M40 36c15-5 21-21 12-33-11 2-18 13-18 31z" fill="#5E7F38" />
+    <Path d="M32 35c-10-9-10-24 0-34 10 10 10 25 0 34z" fill="#6E9A3C" />
+    <Path d="M32 31V6M26 33c-5-8-9-18-12-26M38 33c5-8 9-18 12-26" stroke="#9DBB6A" strokeWidth={2} strokeLinecap="round" fill="none" />
   </Svg>
 );
 
@@ -111,7 +116,7 @@ const SPOTS: Spot[] = [
   { V: Mushroom, size: 50, top: '20%', left: '6%', tilt: -10, dur: 3100 },
   { V: Basil, size: 38, top: '14%', left: '42%', tilt: 20, dur: 2800 },
   { V: Onion, size: 62, top: '66%', left: '-4%', tilt: -16, dur: 3300 },
-  { V: Pepper, size: 54, top: '74%', right: '6%', tilt: 12, dur: 2900 },
+  { V: BokChoy, size: 54, top: '74%', right: '6%', tilt: 12, dur: 2900 },
   { V: Carrot, size: 46, top: '82%', left: '24%', tilt: -8, dur: 3200 },
   { V: Cheese, size: 42, top: '88%', right: '14%', tilt: 10, dur: 3500 },
 ];

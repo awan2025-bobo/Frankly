@@ -53,10 +53,12 @@ export function KitchenScene() {
         <Rect x={40} y={182} width={70} height={30} rx={4} fill="#3F4830" />
         <Rect x={130} y={182} width={70} height={30} rx={4} fill="#3F4830" />
 
-        {/* cutting board with a tomato */}
+        {/* cutting board with two whole tomatoes */}
         <Rect x={118} y={147} width={74} height={13} rx={6} fill="#D98C55" />
         <Path d="M146 147a12 12 0 0 1 24 0z" fill="#DE6644" />
-        <Path d="M176 147a8 8 0 0 1 16 0z" fill="#EE8E68" />
+        <Path d="M154 135.5h8M158 135.5v-3" stroke="#6E9A3C" strokeWidth={2.2} strokeLinecap="round" />
+        <Path d="M176 147a8 8 0 0 1 16 0z" fill="#DE6644" />
+        <Path d="M181 139.5h6M184 139.5v-2.5" stroke="#6E9A3C" strokeWidth={2} strokeLinecap="round" />
 
         {/* pot with steam */}
         <Rect x={238} y={118} width={64} height={42} rx={8} fill="#C9C1A8" />

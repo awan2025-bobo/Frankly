@@ -76,6 +76,7 @@ App (`.env`): `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`. Supab
 
 Newest first. Format: `date time — who — what changed (and anything the other Claude must know)`.
 
+- Oct 17 — Rick's Claude — **Veggie art swapped** (old set was too close to the DubHacks site): tomato slice -> whole tomato, onion slice -> whole red onion, bell pepper -> bok choy, same flat style. Changed in `Veggies.tsx` (Home floaters + pot drop animation use the same art), `KitchenScene.tsx` (board tomatoes now whole) and the Devpost hero (`docs/devpost/hero.png` re-rendered). Don't bring back sliced tomato/onion or bell pepper.
 - Oct 17 — Rick's Claude — Logo PNGs for Devpost from `docs/devpost/logo.html` (same paths as Logo.tsx): `logo.png` (beige), `logo-transparent.png` (real cutouts), `logo-wordmark.png` (logo + "Frankly" in Fraunces Bold, olive #4B5538).
 - Oct 17 — Rick's Claude — Devpost hero graphic: `docs/devpost/hero.html` (same clipart as Veggies.tsx) rendered to `docs/devpost/hero.png` (3000x2000) with headless Edge (`msedge --headless=new --force-device-scale-factor=2 --window-size=1500,1000 --screenshot=...`). Not app code.
 - Oct 17 — Rick's Claude — Small UI fixes: chopping knife now faces the carrot; `Sheet`/`Popup` (ui.tsx) put the tap-to-close backdrop *behind* the content so the ingredient price sheet scrolls on phones; custom SVG air fryer icon (the icon set only had a fan); "Building your / Frankly…" now on two lines with side padding.
