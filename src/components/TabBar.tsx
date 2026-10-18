@@ -4,6 +4,7 @@ import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { leave } from '@/lib/leaveGuard';
 import { C, F, shadow } from '@/lib/theme';
 import type { IconName } from './ui';
 
@@ -33,7 +34,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         const center = route.name === 'index';
         const onPress = () => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-          if (state.index !== index && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+          if (state.index !== index && !event.defaultPrevented) leave(() => navigation.navigate(route.name, route.params));
         };
         if (center) {
           return (

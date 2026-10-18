@@ -116,8 +116,18 @@ export default function RecipeScreen() {
       router.replace('/active');
     });
 
+  // The main action floats at the bottom of the screen, so it's always one tap away while scrolling.
+  const primary =
+    recipe.status === 'draft' || recipe.status === 'saved' ? (
+      <Button title="Let's go" icon="flame" onPress={lets} loading={busy === 'go'} />
+    ) : recipe.status === 'cooked' ? (
+      <Button title="Cook it again" icon="flame" onPress={lets} loading={busy === 'go'} />
+    ) : recipe.status === 'active' ? (
+      <Button title="Open in Active Recipe" icon="flame" onPress={() => router.replace('/active')} />
+    ) : null;
+
   return (
-    <Screen>
+    <Screen footer={primary}>
       <Pressable onPress={goBack} style={{ flexDirection: 'row', alignItems: 'center', gap: 2 }}>
         <Ionicons name="chevron-back" size={20} color={C.muted} />
         <Muted>Back</Muted>
@@ -149,7 +159,6 @@ export default function RecipeScreen() {
       <View style={{ gap: 10, marginTop: 8 }}>
         {recipe.status === 'draft' && (
           <>
-            <Button title="Let's go" icon="flame" onPress={lets} loading={busy === 'go'} />
             <Button
               title="Save for later"
               kind="secondary"
@@ -167,7 +176,6 @@ export default function RecipeScreen() {
         )}
         {recipe.status === 'saved' && (
           <>
-            <Button title="Let's go" icon="flame" onPress={lets} loading={busy === 'go'} />
             <Button title="Tweak recipe" kind="secondary" icon="color-wand-outline" onPress={() => setTweakOpen(true)} />
             <Button
               title="Delete"
@@ -180,7 +188,6 @@ export default function RecipeScreen() {
         )}
         {recipe.status === 'cooked' && (
           <>
-            <Button title="Cook it again" icon="flame" onPress={lets} loading={busy === 'go'} />
             <Button
               title="Delete"
               kind="danger"
@@ -189,9 +196,6 @@ export default function RecipeScreen() {
               onPress={() => run('delete', async () => { await deleteRecipe(recipe.id); goBack(); })}
             />
           </>
-        )}
-        {recipe.status === 'active' && (
-          <Button title="Open in Active Recipe" icon="flame" onPress={() => router.replace('/active')} />
         )}
       </View>
 

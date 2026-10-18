@@ -26,20 +26,27 @@ export function Screen({
   children,
   scroll = true,
   style,
+  footer,
 }: {
   children: ReactNode;
   scroll?: boolean;
   style?: StyleProp<ViewStyle>;
+  footer?: ReactNode; // pinned to the bottom of the screen while the page scrolls (e.g. "Let's go")
 }) {
   return (
     <SafeAreaView style={s.screen} edges={['top']}>
       {scroll ? (
-        <ScrollView contentContainerStyle={[s.scroll, style]} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[s.scroll, style, footer ? { paddingBottom: 140 } : null]} keyboardShouldPersistTaps="handled">
           {children}
         </ScrollView>
       ) : (
         <View style={[s.scroll, { flex: 1 }, style]}>{children}</View>
       )}
+      {footer ? (
+        <View pointerEvents="box-none" style={s.footer}>
+          <View style={s.footerInner}>{footer}</View>
+        </View>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -362,6 +369,9 @@ export const money = (n: number | null | undefined) => (n == null ? '—' : `$${
 export const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: C.bg },
   scroll: { padding: 20, paddingBottom: 120, gap: 16, maxWidth: 640, width: '100%', alignSelf: 'center' },
+  // Beige band (the page color, slightly see-through) so text scrolling underneath doesn't clash with the button.
+  footer: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 20, paddingBottom: 12, paddingTop: 10, backgroundColor: 'rgba(238,232,220,0.94)' },
+  footerInner: { maxWidth: 600, width: '100%', alignSelf: 'center' },
   h1: { fontFamily: F.display, fontSize: 32, lineHeight: 38, color: C.ink },
   h2: { fontFamily: F.display, fontSize: 22, lineHeight: 28, color: C.ink },
   h3: { fontFamily: F.bold, fontSize: 16, color: C.ink },
@@ -398,8 +408,9 @@ export const s = StyleSheet.create({
   },
   chipOn: { backgroundColor: C.primary, borderColor: C.primary },
   chipText: { fontFamily: F.medium, fontSize: 14, color: C.ink },
-  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: R.pill, alignSelf: 'flex-start' },
-  pillText: { fontFamily: F.medium, fontSize: 12 },
+  // flexShrink + wrapping text: a pill never pushes past the edge of its card or the screen.
+  pill: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 4, borderRadius: R.pill, alignSelf: 'flex-start', flexShrink: 1, maxWidth: '100%' },
+  pillText: { fontFamily: F.medium, fontSize: 12, flexShrink: 1 },
   field: {
     flexDirection: 'row',
     alignItems: 'center',

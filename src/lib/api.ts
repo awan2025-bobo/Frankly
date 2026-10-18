@@ -139,7 +139,8 @@ async function setStatus(id: string, status: Recipe['status'], extra: Partial<Re
  * Cooking a recipe from Cooked again makes a fresh copy so its history stays intact.
  * Returns the id of the now-active recipe.
  */
-export async function startRecipe(recipe: Recipe): Promise<string> {
+export async function startRecipe(given: Recipe): Promise<string> {
+  const recipe = await settled(given); // include every tick made on the recipe page
   if (DEMO) return demo.startRecipe(recipe);
   const { error } = await supabase
     .from('recipes')
@@ -175,7 +176,28 @@ export async function startRecipe(recipe: Recipe): Promise<string> {
  * "I already have this" on one ingredient: saved on the recipe, and long-lasting staples are also
  * remembered in the (internal) pantry so future recipes skip them.
  */
-export async function setItemHave(recipe: Recipe, itemName: string, have: boolean): Promise<Recipe> {
+// Ticks are saved one at a time per recipe, each on top of the last. Without this, ticking two items
+// quickly saved two copies of the old recipe and the second overwrote the first (so Active, which
+// reads the saved recipe, showed fewer checkmarks than the recipe page).
+const haveSaves = new Map<string, Promise<Recipe>>();
+
+export function setItemHave(recipe: Recipe, itemName: string, have: boolean): Promise<Recipe> {
+  const prev = haveSaves.get(recipe.id);
+  const next = (prev ? prev.catch(() => recipe) : Promise.resolve(recipe)).then((latest) =>
+    // Keep the caller's copy (status etc.) but the ticks from the save before this one.
+    saveItemHave({ ...recipe, data: { ...recipe.data, items: latest.data.items } }, itemName, have),
+  );
+  haveSaves.set(recipe.id, next);
+  return next;
+}
+
+/** Waits for any "I already have this" saves still in flight, then returns the latest copy of the recipe. */
+async function settled(recipe: Recipe): Promise<Recipe> {
+  const pending = haveSaves.get(recipe.id);
+  return pending ? pending.catch(() => recipe) : recipe;
+}
+
+async function saveItemHave(recipe: Recipe, itemName: string, have: boolean): Promise<Recipe> {
   if (DEMO) return demo.setItemHave(recipe, itemName, have);
   const items = recipe.data.items.map((i) => (i.name === itemName ? { ...i, already_have: have } : i));
   const data = { ...recipe.data, items };

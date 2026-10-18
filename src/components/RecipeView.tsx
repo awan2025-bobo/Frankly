@@ -1,7 +1,7 @@
 // The full recipe page: price breakdown, store comparison, swaps, ingredients, steps.
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useIsFocused } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { C, F, R } from '@/lib/theme';
@@ -33,6 +33,11 @@ export function RecipeView({
 
   // "I already have this" overrides, applied instantly; onToggleHave saves them.
   const [haveOverride, setHaveOverride] = useState<Record<string, boolean>>({});
+  // Coming back to this screen: the parent reloads the saved recipe, so drop on-screen overrides and
+  // show exactly what's saved (the same ticks Active and the recipe page both read).
+  useEffect(() => {
+    if (focused) setHaveOverride({});
+  }, [focused]);
   const isHave = (i: Item) => haveOverride[i.name] ?? i.already_have;
   const toggleHave = (i: Item) => {
     const next = !isHave(i);
@@ -84,18 +89,21 @@ export function RecipeView({
 
       {/* Price */}
       <Card style={{ gap: 12 }}>
-        <View style={st.rowBetween}>
-          <View style={{ gap: 2 }}>
+        <View style={[st.rowBetween, { alignItems: 'flex-start' }]}>
+          <View style={{ gap: 2, flexShrink: 1 }}>
             <Label style={{ color: C.muted }}>Approx. price</Label>
             <Text style={st.bigPrice}>{money(total)}</Text>
             {perServing != null && <Muted>{money(perServing)} per serving</Muted>}
             {estimated > 0 && <Muted style={{ fontSize: 12, color: C.warn }}>Includes ~{money(estimated)} estimated for specialty items</Muted>}
           </View>
-          <Pill
-            tone={total <= budget ? 'good' : 'bad'}
-            icon={total <= budget ? 'checkmark-circle' : 'alert-circle'}
-            text={total <= budget ? `Under your ${money(budget)} budget` : `Over your ${money(budget)} budget`}
-          />
+          {/* Capped at half the card so long amounts wrap inside it instead of running off screen */}
+          <View style={{ maxWidth: '50%', flexShrink: 1, alignItems: 'flex-end' }}>
+            <Pill
+              tone={total <= budget ? 'good' : 'bad'}
+              icon={total <= budget ? 'checkmark-circle' : 'alert-circle'}
+              text={total <= budget ? `Under your ${money(budget)} budget` : `Over your ${money(budget)} budget`}
+            />
+          </View>
         </View>
         {bestStore && (
           <View style={st.reason}>
@@ -209,7 +217,7 @@ export function RecipeView({
                   {isHave(item) ? (
                     <Pill tone="good" icon="home-outline" text="You already have this" />
                   ) : item.is_staple ? (
-                    <Pill icon="bookmark-outline" text="Staple: remembered" />
+                    <Pill icon="bookmark-outline" text="Will add to pantry" />
                   ) : null}
                 </View>
                 {isHave(item) ? (
@@ -329,7 +337,7 @@ function WhereSheet({
               <Body style={{ fontFamily: F.medium }}>I already have this</Body>
               <Muted style={{ fontSize: 12 }}>
                 {have ? 'Taken off your shopping list and total.' : 'Tick it to take it off your list and total.'}
-                {item.is_staple ? ' Frankly will remember it.' : ''}
+                {item.is_staple ? ' Frankly will add it to your pantry.' : ''}
               </Muted>
             </View>
           </Pressable>
@@ -347,7 +355,7 @@ function WhereSheet({
         {options.map(({ store, pick }) => (
           <Card key={store.locationId} style={[{ gap: 6, padding: 14 }, pick?.cost === cheapest && { borderColor: C.good }]}>
             <View style={st.rowBetween}>
-              <H3>{store.name}</H3>
+              <H3 style={{ flex: 1 }}>{store.name}</H3>
               {pick?.cost === cheapest && <Pill tone="good" text="Cheapest" />}
             </View>
             <Muted style={{ fontSize: 12 }}>

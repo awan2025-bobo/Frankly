@@ -183,6 +183,6 @@ function Wisp({ x, y, delay }: { x: number; y: number; delay: number }) {
 
 const st = StyleSheet.create({
   wrap: { alignItems: 'center', justifyContent: 'center', gap: 10 },
-  knife: { position: 'absolute', left: 64, top: 52 },
+  knife: { position: 'absolute', left: 64, top: 46 },
   text: { fontFamily: F.medium, fontSize: 14, color: C.muted, textAlign: 'center' },
 });

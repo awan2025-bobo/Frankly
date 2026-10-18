@@ -217,8 +217,8 @@ export function LocationSection({ value, onChange }: Props) {
           <Label>Frankly will compare prices at:</Label>
           {value.kroger_stores.map((s) => (
             <Card key={s.locationId} style={{ padding: 14, gap: 2 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                <Body style={{ fontFamily: 'Inter_500Medium' }}>{s.name}</Body>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+                <Body style={{ fontFamily: 'Inter_500Medium', flex: 1 }}>{s.name}</Body>
                 {s.distanceMi != null && <Pill text={`${s.distanceMi.toFixed(1)} mi`} />}
               </View>
               <Muted style={{ fontSize: 13 }}>{s.address}</Muted>
