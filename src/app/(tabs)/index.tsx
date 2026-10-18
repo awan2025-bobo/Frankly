@@ -4,7 +4,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Logo } from '@/components/Logo';
 import { InlinePot, VeggieStage, type StageMode } from '@/components/Veggies';
@@ -38,6 +38,7 @@ export default function Home() {
   const [servings, setServings] = useState(profile?.household_size ?? 1);
   const [budget, setBudget] = useState('');
   const [leftovers, setLeftovers] = useState<Leftovers>('some');
+  const [style, setStyle] = useState('Classic'); // Classic | one of their cuisines | Surprise me
   const [problem, setProblem] = useState<string | null>(null);
   const [finishedId, setFinishedId] = useState<string | null>(null);
   // The last recipe Frankly made that you haven't acted on yet (Let's go / Save / Not feeling it).
@@ -49,6 +50,7 @@ export default function Home() {
   // Fade the question out, then move on (the stage flies the veggies into the pot).
   function submitDish() {
     if (!dish.trim()) return;
+    setStyle('Classic'); // every new dish starts as typed
     Animated.timing(askOpacity, { toValue: 0, duration: 260, useNativeDriver: true }).start(() => setStep('servings'));
   }
 
@@ -93,6 +95,7 @@ export default function Home() {
   useEffect(() => {
     if (params.dish) {
       setDish(params.dish);
+      setStyle('Classic');
       setServings(profile?.household_size ?? 1);
       setStep('servings');
     }
@@ -104,7 +107,13 @@ export default function Home() {
   async function cook() {
     setStep('cooking');
     try {
-      const res = await generateRecipe({ dish: dish.trim(), servings, budget: budgetNum, leftovers });
+      const res = await generateRecipe({
+        dish: dish.trim(),
+        servings,
+        budget: budgetNum,
+        leftovers,
+        style: style === 'Classic' ? 'classic' : style === 'Surprise me' ? 'surprise' : style,
+      });
       if (res.problem || !res.recipe) {
         setProblem(res.problem ?? 'Frankly could not make that work.');
         setStep('budget');
@@ -223,6 +232,24 @@ export default function Home() {
               warn={!profile.kroger_stores.length}
             />
           </Card>
+          {/* Style: the dish as usually made (default), one of your cuisines, or a creative take. */}
+          <View style={{ gap: 8 }}>
+            <Label>What style?</Label>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+              {['Classic', ...profile.cuisines.slice(0, 5), 'Surprise me'].map((s) => (
+                <Pressable key={s} onPress={() => setStyle(s)} style={[st.quick, style === s && st.quickOn]}>
+                  <Text style={[st.quickText, style === s && { color: C.onPrimary }]}>{s === 'Classic' || s === 'Surprise me' ? s : `${s}-style`}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+            <Muted style={{ fontSize: 13 }}>
+              {style === 'Classic'
+                ? `${dish} the way it’s usually made.`
+                : style === 'Surprise me'
+                  ? 'A creative take, inspired by the cuisines you like.'
+                  : `${dish} with ${style} flavors.`}
+            </Muted>
+          </View>
           <H2>Looks right?</H2>
           <Button title="Yes, cook it up" icon="flame" onPress={cook} />
           <Button title="Change preferences" kind="secondary" onPress={() => router.push('/preferences')} />

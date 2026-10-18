@@ -24,6 +24,7 @@ export type RecipeRequest = {
   servings: number;
   budget: number;
   leftovers: Leftovers;
+  style?: string; // 'classic' (default) | a cuisine like 'Korean' | 'surprise'
   tweak?: string;
   base_recipe_id?: string;
 };

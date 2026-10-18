@@ -115,13 +115,18 @@ You write one recipe that fits the user's real life, plus a precise shopping spe
 Frankly's code looks up live Kroger prices from your shopping specs, so never state or guess prices.
 
 Rules:
+- MAKE THE DISH THEY ASKED FOR. The title must stay close to their words ("high protein toast" ->
+  "High-Protein Egg & Avocado Toast", never "Miso Tofu Toast"). Don't reinvent it, fuse it with another cuisine,
+  or swap its main idea. Their favorite cuisines and history are NOT a reason to change the dish; they only matter
+  when the style below says "surprise". Preferences adjust spice, seasoning, difficulty, diet, allergies and equipment.
+- Follow the requested STYLE exactly (given with the request).
 - Allergies are absolute: never include an allergen or anything containing it. Respect every diet listed.
 - Only use appliances they own. If the dish truly needs one they lack, adapt it; if impossible, set feasible=false.
 - Set feasible=false (with a friendly "problem") for requests that are not a dish, unsafe, or unrealistic (e.g. a feast for 2 people on $3).
 - Scale spice and seasoning to their sliders; keep technique near their preferred difficulty.
 - Scale quantities to the servings. Leftover preference: "none" = exact amounts, "some" = about one extra portion, "lots" = cook extra for later.
 - Learn from history: if recent leftovers were "more than expected", trim portions about 15%; if "less", add about 15%.
-  Lean toward what they rated highly; avoid repeating dishes cooked in the last 7 days and things like dishes they rejected.
+  Use ratings to tune technique and flavor intensity within the requested dish, not to change which dish it is.
 - Mark long-lasting pantry items as is_staple. Set already_have=true only when it matches one of their staples at home.
 - Shopping specs: generic search terms as you would type on a grocery site; one must_include word; exclude words that
   would match the wrong product. Solids in g, liquids in ml, whole items (eggs, onions, lemons) in count.
@@ -179,6 +184,13 @@ serve(async (req, db) => {
   const servings = Math.round(Number(body.servings));
   const budget = Number(body.budget);
   const leftovers = (["none", "some", "lots"].includes(body.leftovers) ? body.leftovers : "some") as "none" | "some" | "lots";
+  // Style chosen on the preview slide: "classic" (default), a cuisine like "Korean", or "surprise".
+  const style = String(body.style ?? "classic").trim().slice(0, 40) || "classic";
+  const styleText = style.toLowerCase() === "classic"
+    ? "classic: make it the way this dish is usually made in the US, no added fusion or other cuisine's flavors."
+    : style.toLowerCase() === "surprise"
+      ? "surprise: they're open to a creative take; you may lean on their favorite cuisines, but keep it recognizably the dish they asked for."
+      : `${style}-style: make this dish with ${style} flavors and techniques, keeping it recognizably the dish they asked for.`;
   if (!dish) return json({ error: "Tell Frankly what you want to cook." }, 400);
   if (!(servings >= 1 && servings <= 20)) return json({ problem: "Servings should be between 1 and 20." });
   if (!(budget >= 1 && budget <= 500)) return json({ problem: "Budget should be between $1 and $500." });
@@ -204,7 +216,8 @@ Their change request: "${String(body.tweak).slice(0, 300)}"`;
     system: SYSTEM,
     effort: "low",
     prompt: `What Frankly remembers about this user:\n${describeMemory(memory)}\n\n` +
-      `Request: "${dish}" for ${servings} servings, target budget $${budget.toFixed(2)}, leftovers: ${leftovers}.` +
+      `Request: "${dish}" for ${servings} servings, target budget $${budget.toFixed(2)}, leftovers: ${leftovers}.\n` +
+      `STYLE: ${styleText}` +
       tweakText,
     schema: SCHEMA,
   });
