@@ -1,0 +1,24 @@
+FRANKLY - CHANGE LOG
+====================
+
+Every change gets its own entry here, in the same commit as the change.
+Newest entry at the top. Format:
+
+  YYYY-MM-DD - who - short title
+    What changed: files touched and what was done
+    Why: the reason or request behind it
+    Notes: anything the team needs to know (how to test, follow-ups, gotchas)
+
+Earlier history (Oct 17-18, 2026) was kept in HANDOFF.md, which was removed
+from the repo in commit 93ef2c6. To read it:
+  git show 93ef2c6^:HANDOFF.md
+
+--------------------------------------------------------------------------------
+
+2026-10-19 - awan2025's Claude - Started this change log
+  What changed: added CHANGES.txt (this file).
+  Why: record every edit in detail; each change is committed on its own so
+       nothing is lost.
+  Notes: setup on this laptop - renamed "env" to ".env" so the app reads it and
+         Git ignores it (it is never committed); ran npm install; type-check
+         (npx tsc --noEmit) passes. No app code changed.
