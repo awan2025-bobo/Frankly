@@ -2,7 +2,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 import {
   ApplianceSection,
@@ -17,6 +17,7 @@ import {
   TasteSection,
   type Prefs,
 } from '@/components/PrefSections';
+import { Pressable } from '@/components/Pressable';
 import { Button, H1, H2, Muted, Popup, Screen } from '@/components/ui';
 import { setLeaveGuard } from '@/lib/leaveGuard';
 import { useSession } from '@/lib/session';

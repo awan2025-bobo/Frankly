@@ -10,6 +10,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { Animated, Easing, StyleSheet, Text, View, type DimensionValue, type LayoutChangeEvent } from 'react-native';
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
+import { useSizzle } from '@/lib/sounds';
 import { C, F } from '@/lib/theme';
 
 // ---------- Art ----------
@@ -503,6 +504,7 @@ export function VeggieStage({
   const centerTop = h * 0.3 - POT / 2;
   const cooking = mode === 'cooking';
   const sizzling = cooking && PHASES[phase] !== 'lid';
+  useSizzle(cooking); // loops for the whole wait, however long the recipe takes, then fades out
 
   // Pot position + scale per mode.
   useEffect(() => {

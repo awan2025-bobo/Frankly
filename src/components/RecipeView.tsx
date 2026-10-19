@@ -2,8 +2,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useIsFocused } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { Pressable } from './Pressable';
 import { C, F, R } from '@/lib/theme';
 import type { HelpTurn } from '@/lib/api';
 import type { Item, RecipeData, StoreTotal } from '@/lib/types';

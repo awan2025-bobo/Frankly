@@ -3,8 +3,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
+import { Pressable } from '@/components/Pressable';
 import { BookShelf, shelfStyles, type ShelfItem } from '@/components/BookShelf';
 import { Body, Button, EmptyState, H1, Muted, Pill, money } from '@/components/ui';
 import { listRecipes, startRecipe } from '@/lib/api';

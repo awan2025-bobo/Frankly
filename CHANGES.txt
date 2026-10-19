@@ -15,6 +15,43 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-19 - awan2025's Claude - Sound effects: tap click + sizzling pan
+  What changed:
+    - assets/sounds/click.mp3, sizzle.mp3: sounds picked by awan2025.
+    - expo-audio ~57.0.5 added (npx expo install; app.json gets its config
+      plugin). Works in Expo Go and on web. AFTER PULLING: run npm install.
+    - src/lib/sounds.ts (new): all sound logic in one place.
+        playClick(): plays click.mp3 from 0.13s - the file has 0.14s of
+          silence before the click (measured), so skipping it makes taps feel
+          instant. Volume 0.6.
+        useSizzle(on): loops sizzle.mp3 for as long as `on` is true, fading in
+          (0.4s) and out (0.5s). The file is 27.8s; animations shorter than
+          that just fade out early, longer waits loop seamlessly. So the sound
+          always matches the animation length - no file editing needed.
+        Sounds on/off setting, saved on the device (AsyncStorage
+          "frankly.sounds"). Respects the iPhone silent switch and lets music
+          from other apps keep playing.
+    - src/components/Pressable.tsx (new): React Native's Pressable + the click.
+      Every file that used Pressable from 'react-native' now imports this one
+      (ui.tsx, TabBar, RecipeView, BookShelf, StepHelper, ApplianceGrid and
+      the screens), so every button, chip, tab and checkbox clicks - and new
+      ones will too. Tap-outside-to-close backdrops use sound={false}.
+    - src/components/Veggies.tsx: Home pot sizzles for the whole "cooking"
+      stage (useSizzle(cooking)), fading out when the recipe pops.
+    - src/components/Loaders.tsx: SizzlingPan ("Building your Frankly...")
+      sizzles while on screen.
+    - src/app/(tabs)/profile.tsx: Settings has a "Sounds" on/off switch.
+  Why: add sound effects; sounds of any length should fit the animation.
+  Notes:
+    - New tappable things: import { Pressable } from '@/components/Pressable'
+      (not from 'react-native') to get the click.
+    - Adding a sound: put the file in assets/sounds, add a player in
+      src/lib/sounds.ts next to the click/sizzle ones.
+    - Tested on web (demo mode, headless Edge, logged every audio play/pause):
+      each tap played click from 0.13s; sizzle started with the building
+      screen and the Home pot, and paused after fading out when each ended.
+      Type-check passes. Not yet heard on a real phone.
+
 2026-10-19 - awan2025's Claude - Web fixes: text field box, slider selecting text
   What changed:
     - src/app/_layout.tsx: on web only, adds a CSS rule at startup

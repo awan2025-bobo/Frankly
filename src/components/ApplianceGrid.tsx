@@ -1,9 +1,10 @@
 // Onboarding / preferences: big square appliance tiles with line icons (no emojis).
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import type { ComponentProps } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
+import { Pressable } from './Pressable';
 import { C, F, R } from '@/lib/theme';
 
 type McIcon = ComponentProps<typeof MaterialCommunityIcons>['name'];

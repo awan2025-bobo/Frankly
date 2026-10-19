@@ -1,9 +1,10 @@
 // Bottom navigation: Active Recipe, Cookbook, Home (center), "Not sure?", Profile.
 import Ionicons from '@expo/vector-icons/Ionicons';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Pressable } from './Pressable';
 import { leave } from '@/lib/leaveGuard';
 import { C, F, shadow } from '@/lib/theme';
 import type { IconName } from './ui';

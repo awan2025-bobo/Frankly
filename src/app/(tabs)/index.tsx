@@ -4,8 +4,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Animated, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
+import { Pressable } from '@/components/Pressable';
 import { Logo } from '@/components/Logo';
 import { InlinePot, VeggieStage, type StageMode } from '@/components/Veggies';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';

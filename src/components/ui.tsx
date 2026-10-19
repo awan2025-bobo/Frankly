@@ -6,7 +6,6 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Pressable } from './Pressable';
 import { C, F, R, shadow } from '@/lib/theme';
 
 export type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -307,7 +307,7 @@ export function Popup({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={s.backdrop}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+        <Pressable sound={false} style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={s.popup}>
           <View style={s.popupIcon}>
             <Ionicons name={icon} size={26} color={C.primary} />
@@ -337,7 +337,7 @@ export function Sheet({ visible, onClose, children, title }: { visible: boolean;
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       {/* The tap-to-close backdrop sits BEHIND the sheet (not around it), so scrolling inside works on phones. */}
       <View style={[s.backdrop, { justifyContent: 'flex-end', padding: 0 }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
+        <Pressable sound={false} style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={s.sheet}>
           <View style={s.sheetHandle} />
           <View style={[s.rowBetween, { marginBottom: 12 }]}>

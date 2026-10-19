@@ -2,12 +2,14 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Switch, Text, View } from 'react-native';
 
+import { Pressable } from '@/components/Pressable';
 import { Body, Button, Card, H1, H3, Muted, Pill, Popup, Screen, type IconName } from '@/components/ui';
 import { KitchenScene } from '@/components/KitchenScene';
 import { getMemoryStats } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { setSoundsOn, useSoundsOn } from '@/lib/sounds';
 import { C, F } from '@/lib/theme';
 
 type Stats = Awaited<ReturnType<typeof getMemoryStats>>;
@@ -76,6 +78,7 @@ export default function Profile() {
 
       <View style={{ gap: 8, marginTop: 8 }}>
         <H3>Settings</H3>
+        <SoundRow />
         <Card style={{ gap: 6 }}>
           <Body style={{ fontSize: 14 }}>Prices are live from Kroger-family stores (QFC, Fred Meyer) and may change in store.</Body>
           <Muted style={{ fontSize: 12 }}>Your data is tied to this device. No account needed.</Muted>
@@ -104,6 +107,26 @@ function Stat({ value, label }: { value: string; label: string }) {
       <Text style={st.statValue}>{value}</Text>
       <Text style={st.statLabel}>{label}</Text>
     </View>
+  );
+}
+
+function SoundRow() {
+  const on = useSoundsOn();
+  return (
+    <Card style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16 }}>
+      <Ionicons name={on ? 'volume-high-outline' : 'volume-mute-outline'} size={22} color={C.primary} />
+      <View style={{ flex: 1 }}>
+        <H3>Sounds</H3>
+        <Muted style={{ fontSize: 13 }}>Taps and the sizzling pan</Muted>
+      </View>
+      <Switch
+        value={on}
+        onValueChange={setSoundsOn}
+        trackColor={{ false: C.line, true: C.primary }}
+        thumbColor={C.onPrimary}
+        accessibilityLabel="Sounds"
+      />
+    </Card>
   );
 }
 

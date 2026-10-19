@@ -6,9 +6,10 @@
 //     the middle and its cover swings open to a page (renderPage).
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ActivityIndicator, Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, Animated, Easing, Modal, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Pressable } from './Pressable';
 import { C, F, R, shadow } from '@/lib/theme';
 import { Muted, type IconName } from './ui';
 
@@ -291,7 +292,7 @@ function OpenBook({
   return (
     <Modal transparent visible animationType="none" onRequestClose={() => close()}>
       <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(46,51,37,0.5)', opacity: fly }]}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => close()} />
+        <Pressable sound={false} style={StyleSheet.absoluteFill} onPress={() => close()} />
       </Animated.View>
 
       <Animated.View style={[{ position: 'absolute' }, box]}>

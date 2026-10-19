@@ -5,8 +5,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect, useIsFocused, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
+import { Pressable } from '@/components/Pressable';
 import { Cooking } from '@/components/Cooking';
 import { RecipeView } from '@/components/RecipeView';
 import { Button, Card, Field, H3, Muted, Pill, Popup, Screen, money } from '@/components/ui';

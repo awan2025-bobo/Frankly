@@ -4,8 +4,9 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Modal, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Animated, Easing, Modal, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
+import { Pressable } from '@/components/Pressable';
 import { H1, Muted, Screen } from '@/components/ui';
 import { countRecipes } from '@/lib/api';
 import { C, F, R, shadow } from '@/lib/theme';

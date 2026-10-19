@@ -8,7 +8,6 @@ import {
   Keyboard,
   Modal,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,6 +16,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 
+import { Pressable } from './Pressable';
 import { askStep, type HelpTurn } from '@/lib/api';
 import { C, F, R, shadow } from '@/lib/theme';
 import { Logo } from './Logo';
@@ -95,7 +95,7 @@ export function StepHelper({
 
   return (
     <Modal transparent visible animationType="none" onRequestClose={close}>
-      <Pressable style={st.backdrop} onPress={close} />
+      <Pressable sound={false} style={st.backdrop} onPress={close} />
       <Animated.View
         onLayout={(e) => setCardH(e.nativeEvent.layout.height)}
         style={[
