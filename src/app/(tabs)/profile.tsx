@@ -117,7 +117,7 @@ function SoundRow() {
       <Ionicons name={on ? 'volume-high-outline' : 'volume-mute-outline'} size={22} color={C.primary} />
       <View style={{ flex: 1 }}>
         <H3>Sounds</H3>
-        <Muted style={{ fontSize: 13 }}>Taps and the sizzling pan</Muted>
+        <Muted style={{ fontSize: 13 }}>A soft click when you tap</Muted>
       </View>
       <Switch
         value={on}

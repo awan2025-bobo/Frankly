@@ -9,6 +9,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Button, Body, H2 } from '@/components/ui';
 import { SessionProvider, useSession } from '@/lib/session';
+import { preloadSounds } from '@/lib/sounds';
 import { C } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync();
@@ -52,6 +53,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (loaded) SplashScreen.hideAsync();
   }, [loaded]);
+  useEffect(preloadSounds, []); // load tap sounds now so the first tap isn't silent
 
   if (!loaded) return null;
   return (

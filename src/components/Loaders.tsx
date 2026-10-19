@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Ellipse, Path, Rect } from 'react-native-svg';
 
-import { useSizzle } from '@/lib/sounds';
 import { C, F } from '@/lib/theme';
 
 const native = true;
@@ -75,7 +74,6 @@ export function ChoppingLoader({ text }: { text?: string }) {
 /** A frying pan with oil popping and a little steam. */
 export function SizzlingPan({ size = 180 }: { size?: number }) {
   const jitter = useRef(new Animated.Value(0)).current;
-  useSizzle(true); // sizzles for as long as the pan is on screen
   useEffect(() => {
     const steps = [1, -1, 0.5, -0.6, 0];
     const loop = Animated.loop(Animated.sequence(steps.map((v) => Animated.timing(jitter, { toValue: v, duration: 60, useNativeDriver: native }))));

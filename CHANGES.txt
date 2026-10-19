@@ -15,6 +15,32 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-19 - awan2025's Claude - Fix tap clicks (first tap, fast taps); remove sizzle
+  What changed:
+    - src/lib/sounds.ts (rewritten):
+        * Clicks are preloaded at app start (preloadSounds), so the first tap
+          isn't silent. Before, the file only started loading on the first tap.
+        * 4 click players take turns, so fast taps overlap instead of
+          cutting each other off. Before, one player was rewound on every tap,
+          which cut off the previous click and on phones could drop taps.
+        * Each player is rewound to 0.13s (past the file's silence) while
+          idle, 250ms after it plays, so a tap only calls play(). Before, it
+          rewound right at tap time, which is slow on phones.
+        * Sizzle removed (useSizzle and its fade/loop code).
+    - src/app/_layout.tsx: calls preloadSounds() once on startup.
+    - src/components/Veggies.tsx, Loaders.tsx: removed the useSizzle calls.
+    - src/app/(tabs)/profile.tsx: Sounds switch subtitle -> "A soft click
+      when you tap".
+  Why: awan2025 didn't like the sizzle; some taps had no click (often the
+       first), and fast tapping cut sounds off.
+  Notes:
+    - assets/sounds/sizzle.mp3 is still in the folder but unused (nothing
+      loads it). Delete it or swap in a new sizzle later.
+    - Tested on web (headless Edge, logging every audio play/pause): first tap
+      after load played with the file fully loaded; 10 taps 60ms apart gave
+      10 full clicks spread across the 4 players, none cut off. Type-check
+      passes. Not yet tested on a real phone.
+
 2026-10-19 - awan2025's Claude - Sound effects: tap click + sizzling pan
   What changed:
     - assets/sounds/click.mp3, sizzle.mp3: sounds picked by awan2025.
