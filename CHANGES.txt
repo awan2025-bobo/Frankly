@@ -15,6 +15,26 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-19 - awan2025's Claude - Web fixes: text field box, slider selecting text
+  What changed:
+    - src/app/_layout.tsx: on web only, adds a CSS rule at startup
+      (input, textarea { outline: none; }) that removes the browser's square
+      focus box drawn inside our rounded text fields (name field, Home "what
+      would you like to cook" line, step helper chat, every Field in ui.tsx).
+    - src/components/ui.tsx: SliderRow's container gets userSelect: 'none' on
+      web only (noSelectWeb). Dragging a slider (Preferences, onboarding, rate
+      a dish) no longer highlights the page text as you drag.
+  Why: web version looked buggy - odd box when typing, and slider drags were
+       treated as text selection.
+  Notes:
+    - Phone app unchanged (both fixes are Platform.OS === 'web' only).
+    - Cause of the slider bug: @react-native-community/slider's web version
+      tracks the drag itself but never stops the browser's text selection.
+    - Tested in headless Edge on a demo-mode server: before = outline "auto"
+      and a slider drag selected a whole block of text; after = outline
+      "none", nothing selected, slider still moves (5/10 -> 9/10).
+      Type-check passes.
+
 2026-10-19 - awan2025's Claude - New launcher: web link first, QR code on a page
   What changed:
     - scripts/dev.mjs (new): starts Expo (`expo start --lan` by default), hides

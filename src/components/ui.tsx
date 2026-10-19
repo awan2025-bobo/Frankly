@@ -5,6 +5,7 @@ import type { ComponentProps, ReactNode } from 'react';
 import {
   ActivityIndicator,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -210,6 +211,9 @@ export function Field({
   );
 }
 
+// Web only: dragging the slider would otherwise highlight the page's text as you drag.
+const noSelectWeb = Platform.OS === 'web' ? ({ userSelect: 'none' } as ViewStyle) : null;
+
 export function SliderRow({
   label,
   value,
@@ -224,7 +228,7 @@ export function SliderRow({
   right: string;
 }) {
   return (
-    <View style={{ gap: 4 }}>
+    <View style={[{ gap: 4 }, noSelectWeb]}>
       <View style={s.rowBetween}>
         <Label>{label}</Label>
         <Text style={s.sliderValue}>{value}/10</Text>

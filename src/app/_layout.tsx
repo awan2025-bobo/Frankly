@@ -4,7 +4,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { Button, Body, H2 } from '@/components/ui';
@@ -12,6 +12,13 @@ import { SessionProvider, useSession } from '@/lib/session';
 import { C } from '@/lib/theme';
 
 SplashScreen.preventAutoHideAsync();
+
+// Web only: browsers draw a square focus box inside our rounded text fields. The blinking cursor already shows focus.
+if (Platform.OS === 'web' && typeof document !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = 'input, textarea { outline: none; }';
+  document.head.appendChild(style);
+}
 
 function Gate() {
   const { ready, error, resetDemo } = useSession();
