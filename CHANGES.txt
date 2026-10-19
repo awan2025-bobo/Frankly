@@ -15,6 +15,34 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-19 - awan2025's Claude - New launcher: web link first, QR code on a page
+  What changed:
+    - scripts/dev.mjs (new): starts Expo (`expo start --lan` by default), hides
+      the big terminal QR code (EXPO_NO_QR_CODE), waits until Metro is ready,
+      then prints:
+        Web:          http://localhost:<port>  - the app in the browser
+        Phone QR:     http://localhost:8090    - a small page with a QR code;
+                      scan it with the phone Camera to open Expo Go
+        Expo Go link: exp://<wifi-ip>:<port>   - same link as text
+      It picks the laptop's Wi-Fi IP (skips VPN/virtual adapters) and passes it
+      to Expo via REACT_NATIVE_PACKAGER_HOSTNAME, so the QR code always matches
+      the address Expo serves. If port 8081 is taken it uses the next free one.
+    - package.json: added script "dev" -> node scripts/dev.mjs.
+  Why: wanted a web version link up front and the QR code as a link instead
+       of filling the terminal.
+  Notes:
+    - Run: npm.cmd run dev   (Mac: npm run dev). The old way,
+      npx.cmd expo start --lan --clear, still works unchanged.
+    - Extra flags pass through to Expo: npm.cmd run dev -- --clear
+    - --tunnel keeps Expo's own terminal QR code (tunnel URL comes from Expo).
+    - Wrong IP picked? Set it by hand: $env:FRANKLY_HOST="192.168.x.x"
+    - The QR page draws the code with a script from cdnjs, so the laptop needs
+      internet; offline, it shows the exp:// link to type into Expo Go.
+    - Tested: web and iOS bundles both build and load (1045 / 1440 modules),
+      QR page serves the right exp:// link, phone manifest reports the Wi-Fi IP.
+    - Web runs the same screens; phone-only features (haptics, location
+      permission prompts) may behave differently in a browser.
+
 2026-10-19 - awan2025's Claude - Started this change log
   What changed: added CHANGES.txt (this file).
   Why: record every edit in detail; each change is committed on its own so

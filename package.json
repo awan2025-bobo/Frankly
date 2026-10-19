@@ -44,6 +44,7 @@
   },
   "scripts": {
     "start": "expo start",
+    "dev": "node scripts/dev.mjs",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
