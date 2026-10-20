@@ -10,7 +10,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { Pressable } from '@/components/Pressable';
 import { Cooking } from '@/components/Cooking';
 import { RecipeView } from '@/components/RecipeView';
-import { Button, Card, Field, H3, Muted, Pill, Popup, Screen, money } from '@/components/ui';
+import { Body, Button, Card, Field, H3, Muted, Pill, Popup, Screen, money } from '@/components/ui';
 import {
   deleteRecipe,
   dismissRecipe,
@@ -119,7 +119,7 @@ export default function RecipeScreen() {
 
   // The main action floats at the bottom of the screen, so it's always one tap away while scrolling.
   const primary =
-    recipe.status === 'draft' || recipe.status === 'saved' ? (
+    recipe.status === 'draft' || recipe.status === 'saved' || recipe.status === 'planned' ? (
       <Button title="Let's go" icon="flame" onPress={lets} loading={busy === 'go'} />
     ) : recipe.status === 'cooked' ? (
       <Button title="Cook it again" icon="flame" onPress={lets} loading={busy === 'go'} />
@@ -145,6 +145,15 @@ export default function RecipeScreen() {
               <Pill tone="good" text={`Leftovers: ${feedback.leftovers.replace('_', ' ')}`} />
             </View>
           )}
+        </Card>
+      )}
+
+      {recipe.status === 'planned' && (
+        <Card style={{ backgroundColor: C.primarySoft, borderColor: C.primarySoft, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Ionicons name="calendar-outline" size={20} color={C.primary} />
+          <Body style={{ flex: 1, fontSize: 14 }}>
+            Part of your meal plan. The prices below are for this dinner on its own; the plan's grocery list buys shared ingredients once.
+          </Body>
         </Card>
       )}
 

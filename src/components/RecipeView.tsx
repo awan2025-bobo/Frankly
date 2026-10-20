@@ -98,13 +98,16 @@ export function RecipeView({
             {estimated > 0 && <Muted style={{ fontSize: 12, color: C.warn }}>Includes ~{money(estimated)} estimated for specialty items</Muted>}
           </View>
           {/* Capped at half the card so long amounts wrap inside it instead of running off screen */}
-          <View style={{ maxWidth: '50%', flexShrink: 1, alignItems: 'flex-end' }}>
-            <Pill
-              tone={total <= budget ? 'good' : 'bad'}
-              icon={total <= budget ? 'checkmark-circle' : 'alert-circle'}
-              text={total <= budget ? `Under your ${money(budget)} budget` : `Over your ${money(budget)} budget`}
-            />
-          </View>
+          {/* Meal plan dinners: the budget is for the whole week (shown in the Meal Plan book), not per dinner. */}
+          {!data.plan_id && (
+            <View style={{ maxWidth: '50%', flexShrink: 1, alignItems: 'flex-end' }}>
+              <Pill
+                tone={total <= budget ? 'good' : 'bad'}
+                icon={total <= budget ? 'checkmark-circle' : 'alert-circle'}
+                text={total <= budget ? `Under your ${money(budget)} budget` : `Over your ${money(budget)} budget`}
+              />
+            </View>
+          )}
         </View>
         {bestStore && (
           <View style={st.reason}>

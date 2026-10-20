@@ -96,9 +96,11 @@ export type RecipeData = {
   safety_note?: SafetyNote | null; // set when the request clashed with their allergies/diet/appliances/safety
   estimated_total?: number; // part of the price that's estimated (items Kroger doesn't carry)
   used_leftovers?: string[]; // Leftovers book items this recipe was built to use up (cleared when it's cooked)
+  plan_id?: string; // one of the dinners in a weekly meal plan
 };
 
-export type RecipeStatus = 'draft' | 'active' | 'saved' | 'cooked' | 'dismissed';
+// 'planned' = a dinner in a weekly meal plan (Meal Plan book), not started yet.
+export type RecipeStatus = 'draft' | 'active' | 'saved' | 'cooked' | 'dismissed' | 'planned';
 
 export type Recipe = {
   id: string;
@@ -141,4 +143,29 @@ export type Leftover = {
   use_by: string | null; // YYYY-MM-DD
   recipe_id: string | null;
   created_at: string;
+};
+
+/** One line of a meal plan's combined grocery list: bought once, used across several dinners. */
+export type PlanItem = Item & { used_in: string[] }; // titles of the dinners that use it
+
+/** Meal Plan book: 3-7 dinners that share ingredients, with one grocery list for the week. */
+export type MealPlan = {
+  id: string;
+  created_at: string;
+  meals: number;
+  servings: number;
+  budget: number;
+  recipe_ids: string[];
+  data: {
+    title: string;
+    shared_note: string; // how the dinners share ingredients
+    grocery: PlanItem[];
+    stores: KrogerStore[];
+    totals: StoreTotal[];
+    recommended: { locationId: string | null; reason: string };
+    budget_check: { budget: number; total: number; status: 'ok' | 'over' };
+    estimated_total: number;
+    separate_total: number; // what the same dinners would cost bought one recipe at a time
+    demo?: boolean;
+  };
 };

@@ -4,12 +4,14 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import * as demo from './demo';
 import { leftoversFrom } from './leftovers';
 import { DEMO, supabase } from './supabase';
-import type { Feedback, KrogerStore, Leftover, Leftovers, Profile, Recipe, SafetyNote, Suggestion } from './types';
+import type { Feedback, KrogerStore, Leftover, Leftovers, MealPlan, Profile, Recipe, SafetyNote, Suggestion } from './types';
 
 async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke(name, { body });
   if (error) {
     if (error instanceof FunctionsHttpError) {
+      // A brand-new feature whose backend function hasn't been deployed yet.
+      if (error.context.status === 404) throw new Error("This part of Frankly isn't switched on yet (its backend hasn't been deployed).");
       const payload = await error.context.json().catch(() => null);
       throw new Error(payload?.error ?? `Frankly's kitchen had a problem (${name}).`);
     }
@@ -288,8 +290,8 @@ export async function getMemoryStats() {
 
 /** The live database doesn't have the new table yet: say so plainly instead of a raw database error. */
 function tableError(error: { code?: string; message: string }): Error {
-  if (error.code === '42P01' || error.code === 'PGRST205' || /leftover_items/.test(error.message)) {
-    return new Error('The Leftovers book needs a quick database update before it works here. (Developers: see CHANGES.txt.)');
+  if (error.code === '42P01' || error.code === 'PGRST205' || /leftover_items|meal_plans/.test(error.message)) {
+    return new Error('This book needs a quick database update before it works here. (Developers: see CHANGES.txt.)');
   }
   return new Error(error.message);
 }
@@ -330,4 +332,36 @@ export async function removeLeftovers(ids: string[]) {
   if (DEMO) return demo.removeLeftovers(ids);
   const { error } = await supabase.from('leftover_items').delete().in('id', ids);
   if (error) throw tableError(error);
+}
+
+// ---------- Meal Plan book ----------
+
+export type PlanRequest = { meals: number; budget: number; servings: number };
+
+/** Plans the week. A new plan replaces the last one (its dinners you never started are dismissed). */
+export async function generateMealPlan(req: PlanRequest): Promise<{ plan?: MealPlan; problem?: string }> {
+  if (DEMO) return demo.generateMealPlan(req);
+  const prev = await getLatestPlan().catch(() => null);
+  const res = await invoke<{ plan?: MealPlan; problem?: string }>('meal-plan', req);
+  if (res.plan && prev) {
+    await supabase.from('recipes').update({ status: 'dismissed' }).in('id', prev.recipe_ids).eq('status', 'planned');
+  }
+  return res;
+}
+
+export async function getLatestPlan(): Promise<MealPlan | null> {
+  if (DEMO) return demo.getLatestPlan();
+  const { data, error } = await supabase.from('meal_plans').select('*').order('created_at', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw tableError(error);
+  return data as MealPlan | null;
+}
+
+/** The plan's dinners, in plan order (any that were deleted are skipped). */
+export async function getRecipes(ids: string[]): Promise<Recipe[]> {
+  if (DEMO) return demo.getRecipes(ids);
+  if (!ids.length) return [];
+  const { data, error } = await supabase.from('recipes').select('*').in('id', ids);
+  if (error) throw error;
+  const byId = new Map((data as Recipe[]).map((r) => [r.id, r]));
+  return ids.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
 }

@@ -15,6 +15,56 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-20 - awan2025's Claude - New: Meal Plan book (weekly dinners that share ingredients)
+  What it does:
+    - New book on the Cookbook shelf: "Meal Plan" (green). Pick 3-7 dinners,
+      servings, and a weekly grocery budget -> "Plan my week".
+    - Frankly plans dinners that deliberately share ingredients (one bag of
+      spinach for two dinners...) and shows: the week's total at the best
+      store vs. your budget, how much shopping once saves vs. buying each
+      dinner separately, the dinners (tap one -> normal recipe page with
+      "Let's go"; Cooked / Cooking pills), and ONE combined grocery list
+      ("In 3 dinners", packs and price at the recommended store).
+    - "Plan a new week" replaces the plan; dinners from the old plan that you
+      never started are dismissed, started/cooked ones stay.
+  What changed:
+    - supabase/functions/meal-plan/index.ts (new Edge Function): Claude plans
+      the week (each ingredient has a shared `key`), every dinner is checked in
+      code against allergies/diet/appliances (one corrective retry, then a
+      plain "couldn't plan safely" message), Kroger is searched once per
+      shared ingredient per store, and the same results price both the
+      combined list and each dinner alone. Saves dinners as recipes with
+      status 'planned' (+ data.plan_id) and the plan in meal_plans.
+    - supabase/migrations/20261020130000_meal_plans.sql (new): adds 'planned'
+      to recipes.status, meal_plans table with row-level security, grants.
+    - src/lib/types.ts: 'planned' status, RecipeData.plan_id, PlanItem,
+      MealPlan.
+    - src/lib/api.ts: generateMealPlan / getLatestPlan / getRecipes. invoke()
+      now says "isn't switched on yet" when a function isn't deployed (404).
+    - src/lib/demo.ts: demo meal plan (sample dinners, combined list); the
+      demo recipe maker was split into buildRecipe() so both can use it.
+    - src/app/(tabs)/cookbook/plan.tsx (new): the book's page (form + plan).
+    - src/app/(tabs)/cookbook.tsx: Meal Plan book ("N dinners").
+    - src/app/(tabs)/recipe/[id].tsx: planned dinners show "Let's go" and a
+      "Part of your meal plan" note (no tweak/delete, so the list stays right).
+    - src/components/RecipeView.tsx: no per-dinner "over budget" pill on plan
+      dinners (the budget is weekly, shown in the Meal Plan book).
+  >>> TO TURN IT ON FOR THE LIVE APP (on the machine linked to Supabase):
+        npx supabase db push                    (both new migrations)
+        npx supabase functions deploy recipe meal-plan
+      Until then, with real keys: the book says it needs a database update /
+      "isn't switched on yet". Demo mode works now.
+  Cost: one Claude call writes all the dinners (Opus 5.5, up to 32k output
+    tokens) - roughly the cost of a few single recipes per plan. Not measured
+    yet; check the first live plan's cost in the Claude Console.
+  Notes: tested end to end in demo mode (headless browser): plan of 5
+    dinners, garlic shared by 4 / rice + onion by 3, $93.80 for the week vs.
+    $115.26 separately; a dinner opens, cooks and shows "Cooked" in the plan;
+    a new plan keeps the cooked dinner and dismisses the other 4.
+    Both Edge Functions (meal-plan, and recipe from the Leftovers change)
+    pass `deno check` (Deno 2.5.6 via npx). They have NOT run against the
+    live backend yet.
+
 2026-10-20 - awan2025's Claude - New: Leftovers book (+ Leftover Remix)
   What it does:
     - New book on the Cookbook shelf: "Leftovers". When you tap "I've

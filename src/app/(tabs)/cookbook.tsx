@@ -1,4 +1,4 @@
-// Cookbook: the books on the shelf: Saved Recipes, Cooked Recipes and Leftovers.
+// Cookbook: the books on the shelf: Saved Recipes, Cooked Recipes, Meal Plan and Leftovers.
 // Tapping a book plays a short transition: the book grows to fill the screen and its cover swings
 // open onto the page, then the book's recipe list appears underneath.
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -8,20 +8,21 @@ import { Animated, Easing, Modal, StyleSheet, Text, View, useWindowDimensions } 
 
 import { Pressable } from '@/components/Pressable';
 import { H1, Muted, Screen } from '@/components/ui';
-import { countLeftovers, countRecipes } from '@/lib/api';
+import { countLeftovers, countRecipes, getLatestPlan } from '@/lib/api';
 import { C, F, R, shadow } from '@/lib/theme';
 
-type BookIcon = 'bookmark' | 'checkmark-done' | 'file-tray-full';
+type BookIcon = 'bookmark' | 'checkmark-done' | 'file-tray-full' | 'calendar';
 type Opening = { rect: { x: number; y: number; w: number; h: number }; color: string; title: string; icon: BookIcon; href: string };
 
 export default function Cookbook() {
-  const [counts, setCounts] = useState({ saved: 0, cooked: 0, leftovers: 0 });
+  const [counts, setCounts] = useState({ saved: 0, cooked: 0, leftovers: 0, planned: 0 });
   const [opening, setOpening] = useState<Opening | null>(null);
 
   useFocusEffect(
     useCallback(() => {
       countRecipes().then((c) => setCounts((p) => ({ ...p, ...c }))).catch(() => {});
       countLeftovers().then((leftovers) => setCounts((p) => ({ ...p, leftovers }))).catch(() => {});
+      getLatestPlan().then((plan) => setCounts((p) => ({ ...p, planned: plan?.meals ?? 0 }))).catch(() => {});
     }, []),
   );
 
@@ -43,6 +44,14 @@ export default function Cookbook() {
           color={C.primary}
           icon="checkmark-done"
           onOpen={(rect) => setOpening({ rect, color: C.primary, title: 'Cooked Recipes', icon: 'checkmark-done', href: '/cookbook/cooked' })}
+        />
+        <Book
+          title="Meal Plan"
+          count={counts.planned}
+          unit="dinner"
+          color={C.good}
+          icon="calendar"
+          onOpen={(rect) => setOpening({ rect, color: C.good, title: 'Meal Plan', icon: 'calendar', href: '/cookbook/plan' })}
         />
         <Book
           title="Leftovers"

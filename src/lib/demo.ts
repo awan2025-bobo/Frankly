@@ -6,11 +6,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { parseSize, recommend, round2, type StoreTotal } from '../../supabase/functions/_shared/pricing';
 import { leftoversFrom } from './leftovers';
-import type { Feedback, Item, KrogerStore, Leftover, Leftovers, Pick, Profile, Recipe, RecipeData, Suggestion } from './types';
+import type { Feedback, Item, KrogerStore, Leftover, Leftovers, MealPlan, Pick, PlanItem, Profile, Recipe, RecipeData, Suggestion } from './types';
 
 const KEY = 'frankly-demo-v1';
 
-type DB = { profile: Profile | null; recipes: Recipe[]; feedback: Feedback[]; pantry: string[]; leftovers: Leftover[] };
+type DB = { profile: Profile | null; recipes: Recipe[]; feedback: Feedback[]; pantry: string[]; leftovers: Leftover[]; plans: MealPlan[] };
 let db: DB | null = null;
 
 async function load(): Promise<DB> {
@@ -21,8 +21,9 @@ async function load(): Promise<DB> {
   } catch {
     db = null;
   }
-  db ??= { profile: null, recipes: [], feedback: [], pantry: [], leftovers: [] };
+  db ??= { profile: null, recipes: [], feedback: [], pantry: [], leftovers: [], plans: [] };
   db.leftovers ??= []; // saved before the Leftovers book existed
+  db.plans ??= []; // saved before the Meal Plan book existed
   return db;
 }
 
@@ -34,7 +35,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const uid = () => `demo-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 export async function resetDemoData() {
-  db = { profile: null, recipes: [], feedback: [], pantry: [], leftovers: [] };
+  db = { profile: null, recipes: [], feedback: [], pantry: [], leftovers: [], plans: [] };
   await AsyncStorage.removeItem(KEY);
 }
 
@@ -213,14 +214,34 @@ export async function generateRecipe(req: {
   await wait(4200); // let the "Cooking it up…" steps play
   const dish = req.dish.trim();
   if (dish.replace(/[^a-z]/gi, '').length < 3) return { problem: "That doesn't look like a dish yet. Try something like “chicken adobo”." };
+  const recipe = buildRecipe(d, req);
+  d.recipes.push(recipe);
+  await save();
+  return { recipe };
+}
+
+type BuildRequest = {
+  dish: string;
+  servings: number;
+  budget: number;
+  leftovers: Leftovers;
+  tweak?: string;
+  use_leftovers?: { id: string; name: string; amount_text: string }[];
+};
+
+/** One sample recipe (not saved). Used by generateRecipe and by the meal plan. */
+function buildRecipe(d: DB, req: BuildRequest, template?: Template): Recipe {
+  const dish = req.dish.trim();
   const p = d.profile;
   const meatFree = !!p?.diets.some((x) => /vegan|vegetarian/i.test(x));
   const remix = req.use_leftovers ?? [];
   // Remix: the sample recipe that uses the most of their leftovers.
   const uses = (x: Template) => remix.filter((l) => [x.protein, ...x.rest].some((i) => i && sameThing(i.name, l.name))).length;
-  const t = remix.length
-    ? [...TEMPLATES].sort((a, b) => uses(b) - uses(a))[0]
-    : TEMPLATES.find((x) => x.match.test(dish)) ?? genericTemplate(dish);
+  const t =
+    template ??
+    (remix.length
+      ? [...TEMPLATES].sort((a, b) => uses(b) - uses(a))[0]
+      : TEMPLATES.find((x) => x.match.test(dish)) ?? genericTemplate(dish));
   // Learn from the last 'I've finished': more leftovers than expected -> buy ~15% less, fewer -> ~15% more.
   const lastFb = d.feedback.at(-1);
   const learned = lastFb?.leftovers === 'more' ? 0.85 : lastFb?.leftovers === 'less' ? 1.15 : 1;
@@ -316,9 +337,7 @@ export async function generateRecipe(req: {
     started_at: null,
     cooked_at: null,
   };
-  d.recipes.push(recipe);
-  await save();
-  return { recipe };
+  return recipe;
 }
 
 // ---------- Frankly helper (demo) ----------
@@ -470,6 +489,95 @@ export async function finishRecipe(recipe: Recipe, feedback: Omit<Feedback, 'rec
   d.leftovers = d.leftovers.filter((l) => !used.has(l.id));
   for (const l of leftoversFrom(recipe)) d.leftovers.push({ ...l, id: uid(), recipe_id: recipe.id, created_at: new Date().toISOString() });
   await save();
+}
+
+// ---------- Meal Plan book (demo) ----------
+
+// Sample dinners for a week (rotates so a new plan isn't identical).
+const PLAN_POOL = (): Template[] => [...TEMPLATES, genericTemplate('sheet-pan chicken & veg'), genericTemplate('veggie stir-fry')];
+
+export async function generateMealPlan(req: { meals: number; budget: number; servings: number }): Promise<{ plan?: MealPlan; problem?: string }> {
+  const d = await load();
+  await wait(4500); // let the planning steps play
+  const pool = PLAN_POOL();
+  const start = d.plans.length * 2;
+  const perMeal = round2(req.budget / req.meals);
+  const planId = uid();
+  const meals = Array.from({ length: req.meals }, (_, i) => {
+    const t = pool[(start + i) % pool.length];
+    const r = buildRecipe(d, { dish: t.title(t.cuisine), servings: req.servings, budget: perMeal, leftovers: 'some' }, t);
+    return { ...r, id: uid(), status: 'planned' as const, data: { ...r.data, plan_id: planId } };
+  });
+
+  // One grocery list: the same item across dinners is bought once, in enough packs for all of them.
+  const catalog = new Map<string, Ing>(Object.values(I).map((x) => [x.name, x as Ing]));
+  const lines = new Map<string, { ing: Ing; packs: number; amounts: string[]; used_in: string[]; have: boolean }>();
+  for (const m of meals) {
+    for (const item of m.data.items) {
+      const ing = catalog.get(item.name);
+      if (!ing) continue;
+      const line = lines.get(item.name) ?? { ing, packs: 0, amounts: [], used_in: [], have: true };
+      const size = parseSize(ing.size);
+      line.packs += item.need && size ? item.need.quantity / size.qty : ing.staple ? 0 : 1; // fraction of a pack
+      line.amounts.push(item.amount_text);
+      line.used_in.push(m.title);
+      line.have &&= item.already_have;
+      lines.set(item.name, line);
+    }
+  }
+  const grocery: PlanItem[] = [...lines.values()].map((l) => {
+    const packages = Math.max(1, Math.ceil(l.packs - 0.05));
+    const prices: Record<string, Pick | null> = {};
+    if (!l.have) for (const s of DEMO_STORES) prices[s.locationId] = pickFor(l.ing.product, l.ing.size, l.ing.price, packages, l.ing.aisle, s.locationId);
+    return { name: l.ing.name, amount_text: l.amounts.join(' + '), is_staple: !!l.ing.staple, already_have: l.have, prices, swap: null, used_in: l.used_in };
+  });
+  const toBuy = grocery.filter((g) => !g.already_have);
+  const totals: StoreTotal[] = DEMO_STORES.map((s) => ({
+    locationId: s.locationId,
+    name: s.name,
+    distanceMi: s.distanceMi,
+    total: round2(toBuy.reduce((sum, g) => sum + (g.prices[s.locationId]?.cost ?? 0), 0)),
+    found: toBuy.length,
+    missing: [],
+  }));
+  const { best, reason } = recommend(totals, toBuy.length);
+  const total = best?.total ?? 0;
+  const plan: MealPlan = {
+    id: planId,
+    created_at: new Date().toISOString(),
+    meals: req.meals,
+    servings: req.servings,
+    budget: req.budget,
+    recipe_ids: meals.map((m) => m.id),
+    data: {
+      demo: true,
+      title: 'Your Week of Easy Dinners',
+      shared_note: 'Garlic, onions, rice and green onions show up in several dinners, so you buy each one once and use it up.',
+      grocery,
+      stores: DEMO_STORES,
+      totals,
+      recommended: { locationId: best?.locationId ?? null, reason },
+      budget_check: { budget: req.budget, total, status: total <= req.budget ? 'ok' : 'over' },
+      estimated_total: 0,
+      separate_total: round2(meals.reduce((s, m) => s + (m.est_total ?? 0), 0)),
+    },
+  };
+  // A new plan replaces the last one: its dinners you never started go away.
+  const prev = d.plans.at(-1);
+  if (prev) d.recipes = d.recipes.map((r) => (prev.recipe_ids.includes(r.id) && r.status === 'planned' ? { ...r, status: 'dismissed' } : r));
+  d.recipes.push(...meals);
+  d.plans.push(plan);
+  await save();
+  return { plan };
+}
+
+export async function getLatestPlan(): Promise<MealPlan | null> {
+  return (await load()).plans.at(-1) ?? null;
+}
+
+export async function getRecipes(ids: string[]): Promise<Recipe[]> {
+  const d = await load();
+  return ids.flatMap((id) => d.recipes.filter((r) => r.id === id));
 }
 
 // ---------- Leftovers book (demo) ----------
