@@ -15,6 +15,17 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-19 - awan2025's Claude - Web: fast taps no longer select button text
+  What changed: src/components/Pressable.tsx - every Pressable gets
+    userSelect: 'none' on web (merged with its own style, including style
+    functions like ({ pressed }) => ...).
+  Why: tapping buttons quickly in a browser counts as a double/triple click,
+       which selected the button's label text.
+  Notes: phone app unchanged. Tested in headless Edge: a fast triple-click on
+    "Someone else too" selected "Someone else too" before, nothing after.
+    Text inside recipes etc. is still selectable/copyable (only buttons opt
+    out). Type-check passes.
+
 2026-10-19 - awan2025's Claude - Fix tap clicks (first tap, fast taps); remove sizzle
   What changed:
     - src/lib/sounds.ts (rewritten):
