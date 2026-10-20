@@ -1,7 +1,7 @@
 // Onboarding: under a minute, every question after the name can be skipped.
 import { router } from 'expo-router';
-import { useState, type ComponentType } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentType } from 'react';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import { SizzlingPan } from '@/components/Loaders';
 import {
@@ -21,7 +21,7 @@ import { Button, H1, Muted, Screen } from '@/components/ui';
 import { useSession } from '@/lib/session';
 import { C } from '@/lib/theme';
 
-const STEPS: { title: string; subtitle: string; Section: ComponentType<{ value: Prefs; onChange: (p: Prefs) => void }> }[] = [
+const STEPS: { title: string; subtitle: string; Section: ComponentType<{ value: Prefs; onChange: (p: Prefs) => void; onSubmit?: () => void }> }[] = [
   { title: "Hi, I'm Frankly.", subtitle: "I plan meals around your budget and your kitchen. What should I call you?", Section: NameSection },
   { title: "Let's learn about your life", subtitle: 'So portions and plans fit your week.', Section: HouseholdSection },
   { title: 'How do you like it?', subtitle: 'You can always change these later.', Section: TasteSection },
@@ -52,6 +52,32 @@ export default function Onboarding() {
     }
   }
 
+  const { title, subtitle, Section } = STEPS[step];
+  const last = step === STEPS.length - 1;
+  const next = () => (last ? finish(prefs) : setStep(step + 1));
+  const canContinue = !(step === 0 && !prefs.name.trim());
+  const submit = () => {
+    if (canContinue) next();
+  };
+
+  // Web: Enter = Continue, anywhere outside a text field (text fields call submit themselves via onSubmit).
+  // Captured before the focused chip/button sees it, so Enter doesn't re-toggle the last thing clicked.
+  const submitRef = useRef(submit);
+  submitRef.current = submit;
+  useEffect(() => {
+    if (Platform.OS !== 'web' || building) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' || e.repeat) return;
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      e.preventDefault();
+      e.stopPropagation();
+      submitRef.current();
+    };
+    document.addEventListener('keydown', onKey, true);
+    return () => document.removeEventListener('keydown', onKey, true);
+  }, [building]);
+
   if (building) {
     return (
       <View style={{ flex: 1, backgroundColor: C.bg, alignItems: 'center', justifyContent: 'center', gap: 18 }}>
@@ -60,10 +86,6 @@ export default function Onboarding() {
       </View>
     );
   }
-
-  const { title, subtitle, Section } = STEPS[step];
-  const last = step === STEPS.length - 1;
-  const next = () => (last ? finish(prefs) : setStep(step + 1));
 
   return (
     <Screen>
@@ -76,13 +98,13 @@ export default function Onboarding() {
         <H1>{title}</H1>
         <Muted>{subtitle}</Muted>
       </View>
-      <Section value={prefs} onChange={setPrefs} />
+      <Section value={prefs} onChange={setPrefs} onSubmit={submit} />
       {error && <Muted style={{ color: C.bad }}>{error}</Muted>}
       <View style={{ gap: 8, marginTop: 8 }}>
         <Button
           title={last ? 'Build my Frankly' : 'Continue'}
           onPress={next}
-          disabled={step === 0 && !prefs.name.trim()}
+          disabled={!canContinue}
         />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           {step > 0 ? <Button title="Back" kind="ghost" onPress={() => setStep(step - 1)} /> : <View />}

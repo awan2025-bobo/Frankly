@@ -61,10 +61,11 @@ export function prefsToProfile(p: Prefs): Partial<Profile> {
   };
 }
 
-type Props = { value: Prefs; onChange: (next: Prefs) => void };
+// onSubmit: the keyboard's Enter/Done in a text field (onboarding uses it to Continue).
+type Props = { value: Prefs; onChange: (next: Prefs) => void; onSubmit?: () => void };
 
-export function NameSection({ value, onChange }: Props) {
-  return <Field value={value.name} onChangeText={(name) => onChange({ ...value, name })} placeholder="Your first name" />;
+export function NameSection({ value, onChange, onSubmit }: Props) {
+  return <Field value={value.name} onChangeText={(name) => onChange({ ...value, name })} placeholder="Your first name" onSubmitEditing={onSubmit} />;
 }
 
 export function HouseholdSection({ value, onChange }: Props) {
@@ -122,7 +123,7 @@ export function CuisineSection({ value, onChange }: Props) {
   return <ChipGrid options={CUISINES} selected={value.cuisines} onChange={(cuisines) => onChange({ ...value, cuisines })} />;
 }
 
-export function DietSection({ value, onChange }: Props) {
+export function DietSection({ value, onChange, onSubmit }: Props) {
   return (
     <View style={{ gap: 18 }}>
       <View style={{ gap: 8 }}>
@@ -137,6 +138,7 @@ export function DietSection({ value, onChange }: Props) {
             value={value.allergenOther}
             onChangeText={(allergenOther) => onChange({ ...value, allergenOther })}
             placeholder="Type them, separated by commas"
+            onSubmitEditing={onSubmit}
           />
         )}
       </View>
@@ -148,7 +150,7 @@ export function ApplianceSection({ value, onChange }: Props) {
   return <ApplianceGrid options={APPLIANCES} selected={value.appliances} onChange={(appliances) => onChange({ ...value, appliances })} />;
 }
 
-export function StoreSection({ value, onChange }: Props) {
+export function StoreSection({ value, onChange, onSubmit }: Props) {
   return (
     <View style={{ gap: 10 }}>
       <ChipGrid
@@ -157,7 +159,7 @@ export function StoreSection({ value, onChange }: Props) {
         onChange={(stores) => onChange({ ...value, stores })}
       />
       {value.stores.includes('Other') && (
-        <Field value={value.storeOther} onChangeText={(storeOther) => onChange({ ...value, storeOther })} placeholder="Which stores?" />
+        <Field value={value.storeOther} onChangeText={(storeOther) => onChange({ ...value, storeOther })} placeholder="Which stores?" onSubmitEditing={onSubmit} />
       )}
       <Card style={{ backgroundColor: C.cardAlt, padding: 14, flexDirection: 'row', gap: 10 }}>
         <Ionicons name="pricetags-outline" size={18} color={C.muted} />
@@ -207,7 +209,14 @@ export function LocationSection({ value, onChange }: Props) {
   return (
     <View style={{ gap: 12 }}>
       <View style={{ flexDirection: 'row', gap: 8 }}>
-        <Field value={zip} onChangeText={setZip} placeholder="Zip code" keyboardType="number-pad" style={{ flex: 1 }} />
+        <Field
+          value={zip}
+          onChangeText={setZip}
+          placeholder="Zip code"
+          keyboardType="number-pad"
+          style={{ flex: 1 }}
+          onSubmitEditing={() => zip.trim().length >= 5 && lookup({ zip: zip.trim() }, 'zip')}
+        />
         <Button title="Find" onPress={() => lookup({ zip: zip.trim() }, 'zip')} disabled={zip.trim().length < 5} loading={busy === 'zip'} />
       </View>
       <Button title="Use my location" kind="secondary" icon="navigate" onPress={useGps} loading={busy === 'gps'} />

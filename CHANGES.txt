@@ -15,6 +15,27 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-19 - awan2025's Claude - Onboarding: Enter key = Continue
+  What changed:
+    - src/app/onboarding.tsx:
+        * submit(): Continue, but only when allowed (name step needs a name).
+        * Web: a keydown listener (capture phase) makes Enter = Continue
+          anywhere outside a text field. It runs before the focused chip or
+          button sees the key, so Enter doesn't re-toggle the chip you just
+          clicked. Removed while "Building your Frankly..." is showing.
+        * Sections receive onSubmit={submit}.
+    - src/components/PrefSections.tsx: Props has optional onSubmit (keyboard
+      Enter / phone "Done" in a text field).
+        * Name field: Enter/Done -> Continue (phone too).
+        * "Other" allergens field and "Which stores?" field: Enter -> Continue.
+        * Zip code field: Enter -> Find stores (same as the Find button).
+  Why: awan2025 wanted Enter to work like the Continue button.
+  Notes: Preferences screen uses the same sections without onSubmit, so
+    nothing changes there. Tested in headless Edge: Enter with empty name
+    stays; Enter after name, after a toggle, and on a slider step each go to
+    the next step; a clicked chip stays selected after Enter. Type-check
+    passes.
+
 2026-10-19 - awan2025's Claude - Web: fast taps no longer select button text
   What changed: src/components/Pressable.tsx - every Pressable gets
     userSelect: 'none' on web (merged with its own style, including style
