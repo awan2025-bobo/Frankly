@@ -124,6 +124,8 @@ function SoundRow() {
         onValueChange={setSoundsOn}
         trackColor={{ false: C.line, true: C.primary }}
         thumbColor={C.onPrimary}
+        // Web reads the "on" knob color from activeThumbColor (not in React Native's types); without it the knob is teal.
+        {...({ activeThumbColor: C.onPrimary } as object)}
         accessibilityLabel="Sounds"
       />
     </Card>

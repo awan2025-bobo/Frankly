@@ -15,6 +15,13 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-20 - awan2025's Claude - Fix: Sounds switch knob was teal on web
+  What changed: src/app/(tabs)/profile.tsx - the Sounds switch also passes
+    activeThumbColor (cream), which the web version reads for the "on" knob.
+  Why: on web the knob showed react-native-web's default teal (#009688)
+    instead of Frankly's colors. Phones were already fine (thumbColor).
+  Notes: checked in the browser: track olive rgb(75,85,56), knob cream.
+
 2026-10-20 - awan2025's Claude - Fix: "Yes, cook it up" sometimes ignored taps
   What changed: src/components/Veggies.tsx - InlinePot (the decorative pot at
     the end of Home's preview slide) gets pointerEvents="none".
