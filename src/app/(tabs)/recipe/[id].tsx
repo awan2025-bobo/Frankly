@@ -207,6 +207,7 @@ export default function RecipeScreen() {
           title={recipe.data.safety_note.title}
           message={recipe.data.safety_note.message}
           icon={NOTE_ICONS[recipe.data.safety_note.kind] ?? 'information-circle'}
+          alert={recipe.data.safety_note.kind === 'allergy'}
           onClose={() => setNotePopup(false)}
           actions={[
             { label: `Show me the ${recipe.data.title}`, onPress: () => setNotePopup(false) },
@@ -276,6 +277,7 @@ export default function RecipeScreen() {
         title={refusal?.title ?? ''}
         message={refusal?.message}
         icon={NOTE_ICONS[refusal?.kind ?? ''] ?? 'information-circle'}
+        alert={refusal?.kind === 'allergy'}
         onClose={() => setRefusal(null)}
         actions={[
           { label: 'Try a different change', onPress: () => { setRefusal(null); setTweakOpen(true); } },

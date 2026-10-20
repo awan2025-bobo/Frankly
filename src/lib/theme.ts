@@ -19,6 +19,7 @@ export const C = {
   accentSoft: '#F4DEC9',
   bad: '#B4693D', // muted orange: over budget, errors
   badSoft: '#EFDDCB',
+  alert: '#C0392B', // red: the small "!" on allergy warnings only
   white: '#FFFFFF',
 };
 

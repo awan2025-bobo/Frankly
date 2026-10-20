@@ -294,11 +294,13 @@ export function Popup({
   actions,
   onClose,
   children,
+  alert,
 }: {
   visible: boolean;
   title: string;
   message?: string;
   icon?: IconName;
+  alert?: boolean; // small red "!" in the top-right corner (allergy warnings)
   actions: { label: string; onPress: () => void; kind?: 'primary' | 'secondary' | 'ghost' | 'danger' }[];
   onClose: () => void;
   children?: ReactNode;
@@ -309,6 +311,11 @@ export function Popup({
       <View style={s.backdrop}>
         <Pressable sound={false} style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Close" />
         <View style={s.popup}>
+          {alert && (
+            <Text style={s.popupAlert} accessibilityLabel="Allergy warning">
+              !
+            </Text>
+          )}
           <View style={s.popupIcon}>
             <Ionicons name={icon} size={26} color={C.primary} />
           </View>
@@ -437,6 +444,7 @@ export const s = StyleSheet.create({
   segmentText: { fontFamily: F.medium, fontSize: 14, color: C.ink },
   backdrop: { flex: 1, backgroundColor: 'rgba(24,36,26,0.45)', justifyContent: 'center', alignItems: 'center', padding: 24 },
   popup: { backgroundColor: C.bg, borderRadius: R.lg, padding: 24, gap: 10, alignItems: 'center', width: '100%', maxWidth: 400 },
+  popupAlert: { position: 'absolute', top: 10, right: 16, fontFamily: F.bold, fontSize: 18, color: C.alert },
   popupIcon: { width: 52, height: 52, borderRadius: 26, backgroundColor: C.primarySoft, alignItems: 'center', justifyContent: 'center' },
   sheet: { backgroundColor: C.bg, borderTopLeftRadius: R.lg, borderTopRightRadius: R.lg, padding: 20, paddingBottom: 36, width: '100%', maxWidth: 640, alignSelf: 'center' },
   sheetHandle: { width: 40, height: 5, borderRadius: 3, backgroundColor: C.line, alignSelf: 'center', marginBottom: 12 },

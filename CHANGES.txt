@@ -15,6 +15,21 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-19 - awan2025's Claude - Small red "!" on allergy warning popups
+  What changed:
+    - src/lib/theme.ts: new color C.alert '#C0392B' (red), only for this "!".
+    - src/components/ui.tsx: Popup takes alert?: boolean; when true it shows a
+      small bold red "!" (18px) in the popup's top-right corner
+      (style popupAlert; screen readers hear "Allergy warning").
+    - Turned on when the caution's kind is 'allergy' in all three places:
+        src/app/(tabs)/index.tsx - Home notice (dish can't be made safely)
+        src/app/(tabs)/recipe/[id].tsx - "changed for your profile" popup
+          (safety_note) and the tweak-refused popup (refusal)
+      Other cautions (diet, equipment, budget...) look the same as before.
+  Why: awan2025 wanted allergy cautions to stand out with a tiny red "!".
+  Notes: checked with a temporary preview page (deleted, not committed) and a
+    phone-sized screenshot. Type-check passes.
+
 2026-10-19 - awan2025's Claude - Onboarding: Enter key = Continue
   What changed:
     - src/app/onboarding.tsx:

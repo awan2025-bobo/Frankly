@@ -285,6 +285,7 @@ export default function Home() {
         title={notice?.title ?? ''}
         message={notice?.message}
         icon={NOTICE_ICONS[notice?.kind ?? ''] ?? 'information-circle'}
+        alert={notice?.kind === 'allergy'}
         onClose={() => setNotice(null)}
         actions={[
           ...(notice?.alternative
