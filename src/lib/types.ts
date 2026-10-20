@@ -52,6 +52,10 @@ export type Item = {
   swap: { name: string; amount_text: string; reason: string; pick: Pick; savings: number } | null;
   // Not sold at the recommended Kroger store: a typical price, always shown as an estimate.
   estimate?: { cost: number; where: string } | null;
+  // How much the recipe uses (from the shopping spec) and how long the rest keeps, for the Leftovers book.
+  // Missing on recipes made before the Leftovers book existed.
+  need?: { quantity: number; unit: 'g' | 'ml' | 'count'; grams_estimate: number; each_estimate: number };
+  keeps_days?: number;
 };
 
 export type StoreTotal = {
@@ -91,6 +95,7 @@ export type RecipeData = {
   demo?: boolean; // sample prices from demo mode, not Kroger
   safety_note?: SafetyNote | null; // set when the request clashed with their allergies/diet/appliances/safety
   estimated_total?: number; // part of the price that's estimated (items Kroger doesn't carry)
+  used_leftovers?: string[]; // Leftovers book items this recipe was built to use up (cleared when it's cooked)
 };
 
 export type RecipeStatus = 'draft' | 'active' | 'saved' | 'cooked' | 'dismissed';
@@ -126,4 +131,14 @@ export type Suggestion = {
   total_minutes: number;
   difficulty: number;
   tag: 'new' | 'rotation' | 'uses_staples' | 'favorite_style';
+};
+
+/** Leftovers book: a half-used ingredient (added automatically after cooking, or typed in). */
+export type Leftover = {
+  id: string;
+  name: string;
+  amount_text: string;
+  use_by: string | null; // YYYY-MM-DD
+  recipe_id: string | null;
+  created_at: string;
 };

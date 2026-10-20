@@ -4,12 +4,13 @@
 // Once .env has real keys, none of this runs.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { recommend, round2, type StoreTotal } from '../../supabase/functions/_shared/pricing';
-import type { Feedback, Item, KrogerStore, Leftovers, Pick, Profile, Recipe, RecipeData, Suggestion } from './types';
+import { parseSize, recommend, round2, type StoreTotal } from '../../supabase/functions/_shared/pricing';
+import { leftoversFrom } from './leftovers';
+import type { Feedback, Item, KrogerStore, Leftover, Leftovers, Pick, Profile, Recipe, RecipeData, Suggestion } from './types';
 
 const KEY = 'frankly-demo-v1';
 
-type DB = { profile: Profile | null; recipes: Recipe[]; feedback: Feedback[]; pantry: string[] };
+type DB = { profile: Profile | null; recipes: Recipe[]; feedback: Feedback[]; pantry: string[]; leftovers: Leftover[] };
 let db: DB | null = null;
 
 async function load(): Promise<DB> {
@@ -20,7 +21,8 @@ async function load(): Promise<DB> {
   } catch {
     db = null;
   }
-  db ??= { profile: null, recipes: [], feedback: [], pantry: [] };
+  db ??= { profile: null, recipes: [], feedback: [], pantry: [], leftovers: [] };
+  db.leftovers ??= []; // saved before the Leftovers book existed
   return db;
 }
 
@@ -32,7 +34,7 @@ const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const uid = () => `demo-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 export async function resetDemoData() {
-  db = { profile: null, recipes: [], feedback: [], pantry: [] };
+  db = { profile: null, recipes: [], feedback: [], pantry: [], leftovers: [] };
   await AsyncStorage.removeItem(KEY);
 }
 
@@ -159,6 +161,28 @@ function genericTemplate(dish: string): Template {
   };
 }
 
+// "Corn tortillas" matches a leftover called "tortillas" (and vice versa).
+function sameThing(a: string, b: string) {
+  const words = (s: string) => s.toLowerCase().replace(/[^a-z ]/g, '').split(' ').filter((w) => w.length > 2).map((w) => w.replace(/e?s$/, ''));
+  const wb = words(b);
+  return words(a).some((w) => wb.includes(w));
+}
+
+// How much of a pack the recipe uses (servesPerPack is portions per pack), for the Leftovers book.
+function needFor(ing: Ing, portions: number): Item['need'] {
+  const size = parseSize(ing.size);
+  if (!ing.servesPerPack || !size) return undefined;
+  const qty = (size.qty * portions) / ing.servesPerPack;
+  return { quantity: qty, unit: size.unit, grams_estimate: qty, each_estimate: qty };
+}
+
+// Roughly how long the rest keeps once opened/bought.
+function keepsDays(ing: Ing): number {
+  if (ing === I.eggs) return 21;
+  if (ing === I.tortillas) return 7;
+  return ({ Meat: 2, Produce: 5, Dairy: 7, Deli: 7, Frozen: 60 } as Record<string, number>)[ing.aisle] ?? 5;
+}
+
 // Same item, a little different at each store (deterministic so prices don't jump around).
 function priceAt(base: number, storeId: string, key: string) {
   let h = 0;
@@ -183,6 +207,7 @@ export async function generateRecipe(req: {
   leftovers: Leftovers;
   tweak?: string;
   base_recipe_id?: string;
+  use_leftovers?: { id: string; name: string; amount_text: string }[];
 }): Promise<{ recipe?: Recipe; problem?: string }> {
   const d = await load();
   await wait(4200); // let the "Cooking it up…" steps play
@@ -190,7 +215,12 @@ export async function generateRecipe(req: {
   if (dish.replace(/[^a-z]/gi, '').length < 3) return { problem: "That doesn't look like a dish yet. Try something like “chicken adobo”." };
   const p = d.profile;
   const meatFree = !!p?.diets.some((x) => /vegan|vegetarian/i.test(x));
-  const t = TEMPLATES.find((x) => x.match.test(dish)) ?? genericTemplate(dish);
+  const remix = req.use_leftovers ?? [];
+  // Remix: the sample recipe that uses the most of their leftovers.
+  const uses = (x: Template) => remix.filter((l) => [x.protein, ...x.rest].some((i) => i && sameThing(i.name, l.name))).length;
+  const t = remix.length
+    ? [...TEMPLATES].sort((a, b) => uses(b) - uses(a))[0]
+    : TEMPLATES.find((x) => x.match.test(dish)) ?? genericTemplate(dish);
   // Learn from the last 'I've finished': more leftovers than expected -> buy ~15% less, fewer -> ~15% more.
   const lastFb = d.feedback.at(-1);
   const learned = lastFb?.leftovers === 'more' ? 0.85 : lastFb?.leftovers === 'less' ? 1.15 : 1;
@@ -199,17 +229,20 @@ export async function generateRecipe(req: {
   const ings: Ing[] = [...(protein ? [protein] : []), ...t.rest].filter((x) => !(meatFree && x === I.cheese && p!.diets.some((y) => /vegan/i.test(y))));
 
   const items: Item[] = ings.map((ing) => {
-    const have = !!ing.staple && d.pantry.includes(ing.name.toLowerCase());
+    const leftover = remix.find((l) => sameThing(ing.name, l.name));
+    const have = (!!ing.staple && d.pantry.includes(ing.name.toLowerCase())) || !!leftover;
     const packages = ing.servesPerPack ? Math.max(1, Math.ceil(eff / ing.servesPerPack)) : 1;
     const prices: Record<string, Pick | null> = {};
     if (!have) for (const s of DEMO_STORES) prices[s.locationId] = pickFor(ing.product, ing.size, ing.price, packages, ing.aisle, s.locationId);
     return {
       name: ing.name,
-      amount_text: ing.per(req.servings),
+      amount_text: leftover ? `${ing.per(req.servings)} (from your leftovers)` : ing.per(req.servings),
       is_staple: !!ing.staple,
       already_have: have,
       prices,
       swap: null,
+      need: needFor(ing, eff),
+      keeps_days: keepsDays(ing),
     };
   });
 
@@ -245,11 +278,12 @@ export async function generateRecipe(req: {
     learned < 1 ? 'Bought about 15% less since you had more leftovers than expected last time.' : '',
     learned > 1 ? 'Bought about 15% more since you ran short on leftovers last time.' : '',
     req.tweak ? `Applied your tweak: “${req.tweak}”.` : '',
+    remix.length ? `Built to use up your leftovers: ${remix.map((l) => l.name.toLowerCase()).join(', ')}.` : '',
   ].filter(Boolean).join(' ');
 
   const data: RecipeData & { demo: true } = {
     demo: true,
-    title: t.title(dish),
+    title: remix.length ? `${t.title(dish)} (Leftover Remix)` : t.title(dish),
     description: t.description,
     cuisine: t.cuisine,
     servings: req.servings,
@@ -265,6 +299,7 @@ export async function generateRecipe(req: {
     budget_check: { budget: req.budget, total, with_swaps: withSwaps, status: total <= req.budget ? 'ok' : withSwaps <= req.budget ? 'swaps' : 'over' },
     leftovers: req.leftovers,
     priced_at: new Date().toISOString(),
+    used_leftovers: remix.map((l) => l.id),
   };
   const recipe: Recipe = {
     id: uid(),
@@ -430,6 +465,38 @@ export async function finishRecipe(recipe: Recipe, feedback: Omit<Feedback, 'rec
     if (i.is_staple && !i.already_have && !d.pantry.includes(n)) d.pantry.push(n);
   }
   await setStatus(recipe.id, 'cooked', { cooked_at: new Date().toISOString() });
+  // Leftovers book: used-up leftovers out, the rest of each package in.
+  const used = new Set(recipe.data.used_leftovers ?? []);
+  d.leftovers = d.leftovers.filter((l) => !used.has(l.id));
+  for (const l of leftoversFrom(recipe)) d.leftovers.push({ ...l, id: uid(), recipe_id: recipe.id, created_at: new Date().toISOString() });
+  await save();
+}
+
+// ---------- Leftovers book (demo) ----------
+
+export async function listLeftovers(): Promise<Leftover[]> {
+  const d = await load();
+  return [...d.leftovers].sort((a, b) => (a.use_by ?? '9999').localeCompare(b.use_by ?? '9999') || b.created_at.localeCompare(a.created_at));
+}
+
+export async function addLeftover(item: { name: string; amount_text: string; use_by: string | null }): Promise<Leftover> {
+  const d = await load();
+  const row: Leftover = { ...item, id: uid(), recipe_id: null, created_at: new Date().toISOString() };
+  d.leftovers.push(row);
+  await save();
+  return row;
+}
+
+export async function updateLeftover(id: string, patch: Partial<Omit<Leftover, 'id' | 'recipe_id' | 'created_at'>>) {
+  const d = await load();
+  d.leftovers = d.leftovers.map((l) => (l.id === id ? { ...l, ...patch } : l));
+  await save();
+}
+
+export async function removeLeftovers(ids: string[]) {
+  const d = await load();
+  d.leftovers = d.leftovers.filter((l) => !ids.includes(l.id));
+  await save();
 }
 
 export async function getFeedback(recipeId: string) {

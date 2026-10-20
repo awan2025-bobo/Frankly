@@ -2,8 +2,9 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import * as demo from './demo';
+import { leftoversFrom } from './leftovers';
 import { DEMO, supabase } from './supabase';
-import type { Feedback, KrogerStore, Leftovers, Profile, Recipe, SafetyNote, Suggestion } from './types';
+import type { Feedback, KrogerStore, Leftover, Leftovers, Profile, Recipe, SafetyNote, Suggestion } from './types';
 
 async function invoke<T>(name: string, body: Record<string, unknown>): Promise<T> {
   const { data, error } = await supabase.functions.invoke(name, { body });
@@ -27,6 +28,7 @@ export type RecipeRequest = {
   style?: string; // 'classic' (default) | a cuisine like 'Korean' | 'surprise'
   tweak?: string;
   base_recipe_id?: string;
+  use_leftovers?: { id: string; name: string; amount_text: string }[]; // "Remix" from the Leftovers book
 };
 
 /**
@@ -224,7 +226,8 @@ export async function deleteRecipe(id: string) {
 
 /**
  * "I've finished": store the feedback, file it under Cooked with today's date,
- * and remember the staples that were bought (internal pantry, no screen yet).
+ * remember the staples that were bought (internal pantry, no screen yet),
+ * and update the Leftovers book (half-used ingredients in, used-up leftovers out).
  */
 export async function finishRecipe(recipe: Recipe, feedback: Omit<Feedback, 'recipe_id'>) {
   if (DEMO) return demo.finishRecipe(recipe, feedback);
@@ -239,6 +242,18 @@ export async function finishRecipe(recipe: Recipe, feedback: Omit<Feedback, 'rec
       onConflict: 'user_id,name',
       ignoreDuplicates: true,
     });
+    if (error) throw error;
+  }
+  // Never let the Leftovers book block finishing (e.g. before its table exists on the live database).
+  await recordLeftovers(recipe).catch((e) => console.warn('Leftovers not updated:', e));
+}
+
+async function recordLeftovers(recipe: Recipe) {
+  const used = recipe.data.used_leftovers ?? [];
+  if (used.length) await removeLeftovers(used);
+  const fresh = leftoversFrom(recipe).map((l) => ({ ...l, recipe_id: recipe.id }));
+  if (fresh.length) {
+    const { error } = await supabase.from('leftover_items').insert(fresh);
     if (error) throw error;
   }
 }
@@ -267,4 +282,52 @@ export async function getMemoryStats() {
     avgPriceAccuracy: avg('price_accuracy'),
     staples: (pantry.data ?? []).map((p) => p.name as string),
   };
+}
+
+// ---------- Leftovers book ----------
+
+/** The live database doesn't have the new table yet: say so plainly instead of a raw database error. */
+function tableError(error: { code?: string; message: string }): Error {
+  if (error.code === '42P01' || error.code === 'PGRST205' || /leftover_items/.test(error.message)) {
+    return new Error('The Leftovers book needs a quick database update before it works here. (Developers: see CHANGES.txt.)');
+  }
+  return new Error(error.message);
+}
+
+/** Soonest "use by" first. */
+export async function listLeftovers(): Promise<Leftover[]> {
+  if (DEMO) return demo.listLeftovers();
+  const { data, error } = await supabase
+    .from('leftover_items')
+    .select('*')
+    .order('use_by', { ascending: true, nullsFirst: false })
+    .order('created_at', { ascending: false });
+  if (error) throw tableError(error);
+  return data as Leftover[];
+}
+
+export async function countLeftovers(): Promise<number> {
+  if (DEMO) return (await demo.listLeftovers()).length;
+  const { count } = await supabase.from('leftover_items').select('id', { count: 'exact', head: true });
+  return count ?? 0;
+}
+
+export async function addLeftover(item: { name: string; amount_text: string; use_by: string | null }): Promise<Leftover> {
+  if (DEMO) return demo.addLeftover(item);
+  const { data, error } = await supabase.from('leftover_items').insert(item).select().single();
+  if (error) throw tableError(error);
+  return data as Leftover;
+}
+
+export async function updateLeftover(id: string, patch: Partial<Pick<Leftover, 'name' | 'amount_text' | 'use_by'>>) {
+  if (DEMO) return demo.updateLeftover(id, patch);
+  const { error } = await supabase.from('leftover_items').update(patch).eq('id', id);
+  if (error) throw tableError(error);
+}
+
+/** "Used it up" (or cooked into a remix). */
+export async function removeLeftovers(ids: string[]) {
+  if (DEMO) return demo.removeLeftovers(ids);
+  const { error } = await supabase.from('leftover_items').delete().in('id', ids);
+  if (error) throw tableError(error);
 }

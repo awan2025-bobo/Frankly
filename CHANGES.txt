@@ -15,6 +15,56 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-20 - awan2025's Claude - New: Leftovers book (+ Leftover Remix)
+  What it does:
+    - New book on the Cookbook shelf: "Leftovers". When you tap "I've
+      finished", the unused part of each package bought for that recipe lands
+      here (e.g. "Eggs: 10" after using 2 of a dozen, "Frozen peas: about 8
+      oz"), with a use-by date. Staples (salt, oil...) stay in the pantry, and
+      things you already had aren't added.
+    - Tap an item to change the amount / how long it keeps, or "Used it up".
+      "Add something" types in your own (e.g. leftover rice).
+    - "Remix my leftovers" sends them to Home (servings/budget questions as
+      usual); the recipe is built around them, they're marked "you already
+      have" (not charged), and once that recipe is cooked they're removed.
+  What changed:
+    - supabase/functions/_shared/pricing.ts: leftoverAfter() (what's left of
+      the packages, null if under 20% or the size can't be read) and
+      describeAmount() ("about 8 oz", "about 1.5 lb", "about 1 cup", "6").
+      packagesNeeded() now shares needIn() with it - same results (tests).
+    - scripts/test-pricing.ts: leftover tests (all old tests still pass).
+    - src/lib/leftovers.ts (new): leftoversFrom(recipe), use-by labels.
+    - src/lib/types.ts: Item.need + Item.keeps_days, RecipeData.used_leftovers,
+      new Leftover type.
+    - src/lib/api.ts: listLeftovers / countLeftovers / addLeftover /
+      updateLeftover / removeLeftovers; finishRecipe() records leftovers
+      (never blocks finishing if that fails); RecipeRequest.use_leftovers.
+    - src/lib/demo.ts: same in demo mode (sample items know how much of a pack
+      they use and how long they keep).
+    - src/app/(tabs)/cookbook/leftovers.tsx (new): the book's page.
+    - src/app/(tabs)/cookbook.tsx: shelf is a 2-column grid; Leftovers book
+      (mustard); book counts can say "items".
+    - src/app/(tabs)/index.tsx: Home accepts a remix (param "remix") and
+      sends use_leftovers with the recipe request.
+    - src/components/TabBar.tsx: Cookbook tab stays lit on the new pages.
+    - supabase/functions/recipe/index.ts: AI also returns keeps_days per
+      ingredient; items save `need` + `keeps_days`; use_leftovers adds a
+      "LEFTOVER REMIX" section to the prompt; data.used_leftovers saved.
+    - supabase/migrations/20261020120000_leftovers.sql (new): leftover_items
+      table, row-level security (own rows only), grants.
+  >>> TO TURN IT ON FOR THE LIVE APP (on the machine linked to Supabase):
+        npx supabase db push
+        npx supabase functions deploy recipe
+      Until then, with real keys the book shows "needs a quick database
+      update" and finishing a recipe works as before. Demo mode works now.
+      Recipes made before the deploy have no `need` data, so they add no
+      leftovers (typing items in still works once the table exists).
+  Notes: tested end to end in demo mode in a headless browser (cook -> 2
+    leftovers saved; type one in; remix used all 3 and charged none; cooking
+    the remix removed them; add + "Used it up"). The live recipe function
+    change is NOT tested yet (no Deno here) - check one real recipe after
+    deploying. Type-check passes.
+
 2026-10-20 - awan2025's Claude - Fix: Sounds switch knob was teal on web
   What changed: src/app/(tabs)/profile.tsx - the Sounds switch also passes
     activeThumbColor (cream), which the web version reads for the "on" knob.

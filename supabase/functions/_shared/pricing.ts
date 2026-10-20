@@ -72,19 +72,46 @@ export function parseSize(text: string): Size | null {
   return { qty: count!.n * COUNT[count!.u], unit: "count" };
 }
 
+/** The requirement expressed in a package's unit. */
+function needIn(unit: Unit, req: Requirement): number {
+  if (unit === req.unit) return req.quantity;
+  if (unit === "g") return req.grams_estimate;
+  if (unit === "ml") return req.unit === "g" ? req.quantity : req.grams_estimate; // ~1 g per ml
+  return req.each_estimate; // sold by count
+}
+
 /** How many packages of `size` cover the requirement. */
 export function packagesNeeded(sizeText: string, req: Requirement): number {
   const size = parseSize(sizeText);
   if (!size) return 1;
-  let need: number;
-  if (size.unit === req.unit) need = req.quantity;
-  else if (size.unit === "g") need = req.grams_estimate;
-  else if (size.unit === "ml") need = req.unit === "g" ? req.quantity : req.grams_estimate; // ~1 g per ml
-  else need = req.each_estimate; // sold by count
+  const need = needIn(size.unit, req);
   if (!Number.isFinite(need) || need <= 0) return 1;
   // 5% slack so 470 ml of a "16 fl oz" bottle doesn't round up to two bottles.
   const n = Math.ceil(need / (size.qty * 1.05));
   return Math.min(Math.max(n, 1), 12);
+}
+
+/**
+ * What's left of the packages bought after using `req` (Leftovers book), in the package's unit.
+ * Null when the size can't be read or nothing meaningful is left (under 20% of what was bought).
+ */
+export function leftoverAfter(sizeText: string, packages: number, req: Requirement): Size | null {
+  const size = parseSize(sizeText);
+  if (!size) return null;
+  const need = needIn(size.unit, req);
+  if (!Number.isFinite(need) || need < 0) return null;
+  const bought = size.qty * packages;
+  const left = bought - need;
+  const enough = size.unit === "count" ? left >= 1 : left >= 30; // at least 1 item, or ~1 oz / 2 tbsp
+  return left >= bought * 0.2 && enough ? { qty: size.unit === "count" ? Math.floor(left) : left, unit: size.unit } : null;
+}
+
+/** "about 8 oz", "about 1.5 lb", "about 1 cup", "6". */
+export function describeAmount(s: Size): string {
+  if (s.unit === "count") return String(Math.round(s.qty));
+  const nice = (n: number) => String(Math.round(n * 2) / 2).replace(/\.0$/, "");
+  if (s.unit === "g") return s.qty >= 454 ? `about ${nice(s.qty / 453.592)} lb` : `about ${Math.max(1, Math.round(s.qty / 28.3495))} oz`;
+  return s.qty >= 120 ? `about ${nice(s.qty / 236.588)} cup${s.qty >= 354 ? "s" : ""}` : `about ${Math.max(1, Math.round(s.qty / 29.5735))} fl oz`;
 }
 
 // Ready-made products that often share a keyword with a raw ingredient ("Gochujang Beef Cup Noodles" vs gochujang).

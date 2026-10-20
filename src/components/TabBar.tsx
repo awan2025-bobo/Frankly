@@ -21,7 +21,12 @@ const TABS: Record<string, { label: string; icon: IconName; iconOn: IconName }> 
 const FADED = 'rgba(238,232,220,0.62)';
 
 // Pages that live inside the tabs but aren't tabs themselves: which tab stays highlighted.
-const PARENT: Record<string, string> = { 'cookbook/[book]': 'cookbook', preferences: 'profile' };
+const PARENT: Record<string, string> = {
+  'cookbook/[book]': 'cookbook',
+  'cookbook/leftovers': 'cookbook',
+  'cookbook/plan': 'cookbook',
+  preferences: 'profile',
+};
 
 export function TabBar({ state, navigation }: BottomTabBarProps) {
   const current = state.routes[state.index]?.name;

@@ -1,4 +1,4 @@
-// Cookbook: two "books", Saved Recipes and Cooked Recipes.
+// Cookbook: the books on the shelf: Saved Recipes, Cooked Recipes and Leftovers.
 // Tapping a book plays a short transition: the book grows to fill the screen and its cover swings
 // open onto the page, then the book's recipe list appears underneath.
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -8,19 +8,20 @@ import { Animated, Easing, Modal, StyleSheet, Text, View, useWindowDimensions } 
 
 import { Pressable } from '@/components/Pressable';
 import { H1, Muted, Screen } from '@/components/ui';
-import { countRecipes } from '@/lib/api';
+import { countLeftovers, countRecipes } from '@/lib/api';
 import { C, F, R, shadow } from '@/lib/theme';
 
-type BookIcon = 'bookmark' | 'checkmark-done';
+type BookIcon = 'bookmark' | 'checkmark-done' | 'file-tray-full';
 type Opening = { rect: { x: number; y: number; w: number; h: number }; color: string; title: string; icon: BookIcon; href: string };
 
 export default function Cookbook() {
-  const [counts, setCounts] = useState({ saved: 0, cooked: 0 });
+  const [counts, setCounts] = useState({ saved: 0, cooked: 0, leftovers: 0 });
   const [opening, setOpening] = useState<Opening | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      countRecipes().then(setCounts).catch(() => {});
+      countRecipes().then((c) => setCounts((p) => ({ ...p, ...c }))).catch(() => {});
+      countLeftovers().then((leftovers) => setCounts((p) => ({ ...p, leftovers }))).catch(() => {});
     }, []),
   );
 
@@ -43,6 +44,14 @@ export default function Cookbook() {
           icon="checkmark-done"
           onOpen={(rect) => setOpening({ rect, color: C.primary, title: 'Cooked Recipes', icon: 'checkmark-done', href: '/cookbook/cooked' })}
         />
+        <Book
+          title="Leftovers"
+          count={counts.leftovers}
+          unit="item"
+          color={C.warn}
+          icon="file-tray-full"
+          onOpen={(rect) => setOpening({ rect, color: C.warn, title: 'Leftovers', icon: 'file-tray-full', href: '/cookbook/leftovers' })}
+        />
       </View>
       {opening && <OpenTransition {...opening} onDone={() => setOpening(null)} />}
     </Screen>
@@ -52,12 +61,14 @@ export default function Cookbook() {
 function Book({
   title,
   count,
+  unit = 'recipe',
   color,
   icon,
   onOpen,
 }: {
   title: string;
   count: number;
+  unit?: string;
   color: string;
   icon: BookIcon;
   onOpen: (rect: Opening['rect']) => void;
@@ -68,12 +79,12 @@ function Book({
       ref={ref}
       onPress={() => ref.current?.measureInWindow((x, y, w, h) => onOpen({ x, y, w, h }))}
       style={({ pressed }) => [st.book, { backgroundColor: color }, pressed && { transform: [{ rotate: '-1.5deg' }] }]}>
-      <BookFace title={title} icon={icon} count={count} />
+      <BookFace title={title} icon={icon} count={count} unit={unit} />
     </Pressable>
   );
 }
 
-function BookFace({ title, icon, count }: { title: string; icon: BookIcon; count?: number }) {
+function BookFace({ title, icon, count, unit = 'recipe' }: { title: string; icon: BookIcon; count?: number; unit?: string }) {
   return (
     <>
       <View style={st.spine} />
@@ -82,7 +93,7 @@ function BookFace({ title, icon, count }: { title: string; icon: BookIcon; count
         <Text style={st.bookTitle}>{title}</Text>
         {count != null && (
           <Text style={st.bookCount}>
-            {count} {count === 1 ? 'recipe' : 'recipes'}
+            {count} {count === 1 ? unit : `${unit}s`}
           </Text>
         )}
       </View>
@@ -138,8 +149,8 @@ function OpenTransition({ rect, color, title, icon, href, onDone }: Opening & { 
 }
 
 const st = StyleSheet.create({
-  shelf: { flexDirection: 'row', gap: 16, marginTop: 12 },
-  book: { flex: 1, aspectRatio: 0.72, borderRadius: R.md, borderTopLeftRadius: 6, borderBottomLeftRadius: 6, overflow: 'hidden', ...shadow },
+  shelf: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginTop: 12 },
+  book: { width: '47%', flexGrow: 1, maxWidth: '48%', aspectRatio: 0.72, borderRadius: R.md, borderTopLeftRadius: 6, borderBottomLeftRadius: 6, overflow: 'hidden', ...shadow },
   spine: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 14, backgroundColor: 'rgba(0,0,0,0.18)' },
   pages: {
     position: 'absolute',

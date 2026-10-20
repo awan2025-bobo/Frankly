@@ -10,7 +10,7 @@ import { Pressable } from '@/components/Pressable';
 import { Logo } from '@/components/Logo';
 import { InlinePot, VeggieStage, type StageMode } from '@/components/Veggies';
 import { Body, Button, Card, Field, H1, H2, Label, Muted, Pill, Popup, Screen, Segmented, Stepper } from '@/components/ui';
-import { generateRecipe, getRecipe } from '@/lib/api';
+import { generateRecipe, getRecipe, type RecipeRequest } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { C, F } from '@/lib/theme';
 import type { Leftovers, SafetyNote } from '@/lib/types';
@@ -42,7 +42,7 @@ const greeting = () => {
 
 export default function Home() {
   const { profile } = useSession();
-  const params = useLocalSearchParams<{ dish?: string; t?: string }>();
+  const params = useLocalSearchParams<{ dish?: string; t?: string; remix?: string }>();
   const [step, setStep] = useState<Step>('ask');
   const [dish, setDish] = useState('');
   const [servings, setServings] = useState(profile?.household_size ?? 1);
@@ -56,12 +56,15 @@ export default function Home() {
   // A new recipe isn't saved anywhere until then, so Home keeps a way back to it.
   const [lastDraft, setLastDraft] = useState<{ id: string; title: string } | null>(null);
   const [line, setLine] = useState(0);
+  // Leftovers to use up, when this recipe came from "Remix" in the Leftovers book.
+  const [remix, setRemix] = useState<NonNullable<RecipeRequest['use_leftovers']>>([]);
   const askOpacity = useRef(new Animated.Value(1)).current;
 
   // Fade the question out, then move on (the stage flies the veggies into the pot).
   function submitDish() {
     if (!dish.trim()) return;
     setStyle('Classic'); // every new dish starts as typed
+    setRemix([]); // a typed dish is a fresh request, not a remix
     Animated.timing(askOpacity, { toValue: 0, duration: 260, useNativeDriver: true }).start(() => setStep('servings'));
   }
 
@@ -106,11 +109,12 @@ export default function Home() {
   useEffect(() => {
     if (params.dish) {
       setDish(params.dish);
+      setRemix(params.remix ? JSON.parse(params.remix) : []);
       setStyle('Classic');
       setServings(profile?.household_size ?? 1);
       setStep('servings');
     }
-  }, [params.dish, params.t, profile?.household_size]);
+  }, [params.dish, params.t, params.remix, profile?.household_size]);
 
   const budgetNum = Number(budget);
   const quick = [8, 12, 15, 20, 30].map((b) => Math.round(b * Math.max(1, servings / 2)));
@@ -124,6 +128,7 @@ export default function Home() {
         budget: budgetNum,
         leftovers,
         style: style === 'Classic' ? 'classic' : style === 'Surprise me' ? 'surprise' : style,
+        ...(remix.length ? { use_leftovers: remix } : {}),
       });
       if (res.problem || !res.recipe) {
         // Clashes with their allergies/diet/kitchen, unsafe, not food, or an impossible budget: explain, offer a dish they can make.

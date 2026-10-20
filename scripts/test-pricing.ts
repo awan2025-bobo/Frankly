@@ -1,6 +1,6 @@
 // Offline tests for the price math. Run: npx tsx scripts/test-pricing.ts
 import assert from "node:assert/strict";
-import { parseSize, packagesNeeded, relevant, choose, recommend, milesBetween } from "../supabase/functions/_shared/pricing.ts";
+import { parseSize, packagesNeeded, relevant, choose, recommend, milesBetween, leftoverAfter, describeAmount } from "../supabase/functions/_shared/pricing.ts";
 
 const near = (a: number, b: number) => Math.abs(a - b) < 0.5;
 
@@ -60,3 +60,16 @@ assert.equal(relevant(c("Kikkoman Gochujang Spicy Miso Teriyaki Sauce", "10 oz",
 assert.equal(relevant(c("Kikkoman Soy Sauce", "15 fl oz", 3.29), "soy", [], "Soy sauce soy sauce"), true);
 assert.equal(relevant(c("Hunt's Tomato Sauce", "15 oz", 1.0), "tomato", [], "Roma tomatoes roma tomatoes"), false);
 console.log("sauce guard tests passed");
+
+// Leftovers book: what's left of the package after the recipe.
+const need = (quantity: number, unit: "g" | "ml" | "count", grams = quantity, each = 1) => ({ quantity, unit, grams_estimate: grams, each_estimate: each });
+assert.equal(describeAmount(leftoverAfter("30 ct", 1, need(6, "count", 180, 6))!), "24"); // tortillas
+assert.equal(describeAmount(leftoverAfter("12 ct", 1, need(4, "count", 200, 4))!), "8"); // eggs
+assert.equal(describeAmount(leftoverAfter("2 lb", 1, need(450, "g"))!), "about 1 lb"); // 2 lb cabbage, used ~1 lb
+assert.equal(describeAmount(leftoverAfter("16 oz", 1, need(200, "g"))!), "about 9 oz");
+assert.equal(describeAmount(leftoverAfter("32 fl oz", 1, need(240, "ml"))!), "about 3 cups");
+assert.equal(leftoverAfter("16 oz", 1, need(430, "g")), null); // ~5% left: not worth listing
+assert.equal(leftoverAfter("1 bunch", 1, need(30, "g")), null); // size can't be read
+assert.equal(leftoverAfter("12 ct", 1, need(12, "count", 600, 12)), null); // used it all
+assert.equal(packagesNeeded("30 ct", need(6, "count", 180, 6)), 1); // unchanged by the refactor
+console.log("leftover tests passed");
