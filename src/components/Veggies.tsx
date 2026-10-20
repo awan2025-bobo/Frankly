@@ -334,7 +334,9 @@ export function InlinePot() {
     return () => loop.stop();
   }, [enter, bob]);
   return (
+    // Decorative: taps go through to the buttons above, which the pot covers while it drops in.
     <Animated.View
+      pointerEvents="none"
       style={{
         alignSelf: 'center',
         width: POT,

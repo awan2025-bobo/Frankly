@@ -15,6 +15,17 @@ from the repo in commit 93ef2c6. To read it:
 
 --------------------------------------------------------------------------------
 
+2026-10-20 - awan2025's Claude - Fix: "Yes, cook it up" sometimes ignored taps
+  What changed: src/components/Veggies.tsx - InlinePot (the decorative pot at
+    the end of Home's preview slide) gets pointerEvents="none".
+  Why: the pot drops in from 160px above its spot, right over "Yes, cook it
+    up" / "Change preferences", and it caught taps meant for those buttons
+    (found while testing; the browser's elementFromPoint on the button
+    returned the pot's SVG). Slower phones keep it there longer. Likely part
+    of "some buttons don't work".
+  Notes: the big VeggieStage overlay already had pointerEvents none. Checked
+    after the fix: the click point on the button is the button itself.
+
 2026-10-19 - awan2025's Claude - Small red "!" on allergy warning popups
   What changed:
     - src/lib/theme.ts: new color C.alert '#C0392B' (red), only for this "!".
